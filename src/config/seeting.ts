@@ -1,20 +1,20 @@
 import userMenus from '@/router/modules/index.ts';
+import { envConfig } from './env';
 
 /** 接口地址 */
-export const API_BASE_URL: string = import.meta.env.VITE_API_URL;
+export const API_BASE_URL: string = envConfig.apiUrl;
 
 /** 项目名称 */
-export const PROJECT_NAME: string = import.meta.env.VITE_APP_NAME;
+export const PROJECT_NAME: string = envConfig.appName;
 
 /** 项目api 默认服务代理 base地址 */
-export const VITE_API_URL_BASE: string = import.meta.env.VITE_API_URL_BASE;
+export const VITE_API_URL_BASE: string = envConfig.baseServiceUrl;
 
 /** 项目api user(用户)服务代理 base地址 */
-export const VITE_API_URL_USER: string = import.meta.env.VITE_API_URL_USER;
+export const VITE_API_URL_USER: string = envConfig.userServiceUrl;
 
 /** 项目api customs(海关)服务代理 base地址 */
-export const VITE_API_URL_CUSTOMS: string = import.meta.env
-  .VITE_API_URL_CUSTOMS;
+export const VITE_API_URL_CUSTOMS: string = envConfig.customsServiceUrl;
 
 /** 不需要登录的路由 */
 export const WHITE_LIST: string[] = ['/login'];

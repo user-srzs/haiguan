@@ -29,42 +29,96 @@ const router = createRouter({
 });
 
 // 路由守卫-前置守卫
-router.beforeEach((to,from,next  ) => {
+router.beforeEach(async (to, from, next) => {
   // 显示进度条（排除刷新路径）
   if (!to.path.includes(REDIRECT_PATH)) {
     NProgress.start();
     setPageTitle(getRouteTitle(to));
   }
-  // 登录时直接放行, 未登录时需要判断路径是否需要登录(白名单内页面不需要登录)
-  if(!getToken()) {
-    // 判断跳转的路径是否是白名单, 在白名单内放行, 不在白名单内跳转到登录界面
-    if(!WHITE_LIST.includes(to.path)) {
-      const query = to.path === LAYOUT_PATH ? {} : {
-        from: encodeURIComponent(to.fullPath)
-      }
-      // 跳转到登录界面
-      next({
-        path: '/login',
-        query
-      })
-    }
-    next();
-  }
-  // 注册动态路由
+
+  const token = getToken();
   const userStore = useUserStore();
-  if(!userStore.menus) {
-    const { menus, homePath } = userStore.getMenus();
-    if(menus) {
-      getMenuRoutes(menus, homePath).forEach((r: RouteRecordRaw) => {
-        router.addRoute(r);
-      })
-      next({ ...to, replace: true });
-    }else {
-      next();
+
+  // 如果没有token
+  if (!token) {
+    // 白名单页面直接放行
+    if (WHITE_LIST.includes(to.path)) {
+      return next();
+    }
+    
+    // 非白名单页面跳转到登录页
+    const query = to.path === LAYOUT_PATH ? {} : {
+      from: encodeURIComponent(to.fullPath)
+    };
+    return next({
+      path: '/login',
+      query
+    });
+  }
+
+  // 有token但访问登录页，重定向到首页
+  if (to.path === '/login') {
+    return next({ path: from.path || HOME_PATH });
+  }
+
+  // 检查是否已加载用户菜单
+  if (!userStore.menus) {
+    try {
+      const { menus, homePath } = userStore.getMenus();
+      
+      if (menus && menus.length > 0) {
+        // 动态添加路由
+        const menuRoutes = getMenuRoutes(menus, homePath);
+        menuRoutes.forEach((route: RouteRecordRaw) => {
+          router.addRoute(route);
+        });
+        
+        // 确保路由已添加后再跳转
+        return next({ ...to, replace: true });
+      } else {
+        // 没有菜单权限，跳转到无权限页面
+        return next('/403');
+      }
+    } catch (error) {
+      console.error('获取用户菜单失败:', error);
+      // 获取菜单失败，清除token并跳转到登录页
+      userStore.logout();
+      return next('/login');
     }
   }
+
+  // 检查路由权限
+  if (to.meta?.requiresAuth !== false && !hasRoutePermission(to, userStore.menus)) {
+    return next('/403');
+  }
+
   next();
-})
+});
+
+/**
+ * 检查路由权限
+ */
+function hasRoutePermission(route: any, menus: any[]): boolean {
+  // 如果路由不需要权限检查，直接返回true
+  if (route.meta?.requiresAuth === false) {
+    return true;
+  }
+
+  // 递归检查菜单中是否存在该路由
+  function checkMenus(menuList: any[]): boolean {
+    return menuList.some(menu => {
+      if (menu.path === route.path) {
+        return true;
+      }
+      if (menu.children && menu.children.length > 0) {
+        return checkMenus(menu.children);
+      }
+      return false;
+    });
+  }
+
+  return checkMenus(menus);
+}
 
 // 路由守卫-后置守卫
 router.afterEach((to) => {

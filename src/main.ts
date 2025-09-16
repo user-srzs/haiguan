@@ -4,11 +4,7 @@ import router from './router';
 import i18n from './i18n';
 import VueViewer from 'v-viewer';
 // import * as ElIcon from '@element-plus/icons-vue';
-import {
-  VITE_API_URL_BASE,
-  VITE_API_URL_CUSTOMS,
-  VITE_API_URL_USER
-} from './config/seeting';
+import { envConfig } from './config/env';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import 'xgplayer/dist/index.min.css';
@@ -25,11 +21,11 @@ import 'echarts';
 const app = createApp(App);
 
 // 定义全局变量-默认 base服务地址
-app.config.globalProperties.$baseServiceUrl = VITE_API_URL_BASE;
+app.config.globalProperties.$baseServiceUrl = envConfig.baseServiceUrl;
 // 定义全局变量-user base服务地址
-app.config.globalProperties.$userServiceUrl = VITE_API_URL_USER;
+app.config.globalProperties.$userServiceUrl = envConfig.userServiceUrl;
 // 定义全局变量-customs base服务地址
-app.config.globalProperties.$customsServiceUrl = VITE_API_URL_CUSTOMS;
+app.config.globalProperties.$customsServiceUrl = envConfig.customsServiceUrl;
 
 // // 全局引入 element plus icon
 // Object.keys(ElIcon).forEach((name) => {

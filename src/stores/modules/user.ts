@@ -2,7 +2,7 @@
  * 登录用户状态管理
  */
 import { defineStore } from 'pinia';
-import { mapTree, isExternalLink } from '@/utils/index.ts';
+import { mapTree, isExternalLink, removeToken } from '@/utils/index.ts';
 import type { MenuItem } from '@/router/model.ts';
 // import type { ProfileDto } from '@/api/user/model';
 // import type { AreaWholeParentsDto, DistrictDto } from '@/api/districts/model';
@@ -84,6 +84,16 @@ export const useUserStore = defineStore('user', {
     },
     setAsseterOptions(asseterOptions: AsseterDTO[]) {
       this.asseterOptions = asseterOptions;
+    },
+    /**
+     * 退出登录
+     */
+    logout() {
+      this.info = null;
+      this.menus = null;
+      this.authorities = [];
+      this.roles = [];
+      removeToken();
     }
   },
   persist: {

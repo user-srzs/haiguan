@@ -6,6 +6,7 @@ import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 import vueSetupExtend from 'vite-plugin-vue-setup-extend';
+import { sassSilencePlugin } from './build/plugins/sass-silence';
 
 /**
  * 配置项
@@ -16,6 +17,10 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   // 执行打包命令，生产环境配置
   const isBuild = command === 'build';
+  // 是否启用压缩
+  const enableCompress = env.VITE_BUILD_COMPRESS === 'true';
+  // 是否删除console
+  const dropConsole = env.VITE_DROP_CONSOLE === 'true';
   // 别名
   const alias = {
     '@/': resolve('src') + '/',
@@ -23,6 +28,7 @@ export default defineConfig(({ command, mode }) => {
   };
   // 插件
   const plugins = [
+    sassSilencePlugin(),
     vue(),
     vueSetupExtend(),
     AutoImport({
@@ -52,14 +58,16 @@ export default defineConfig(({ command, mode }) => {
     //   })
     // );
     // gzip压缩
-    plugins.push(
-      Compression({
-        disable: !isBuild,
-        threshold: 10240,
-        algorithm: 'gzip',
-        ext: '.gz'
-      })
-    );
+    if (enableCompress) {
+      plugins.push(
+        Compression({
+          disable: !isBuild,
+          threshold: 10240,
+          algorithm: env.VITE_BUILD_COMPRESS_TYPE || 'gzip',
+          ext: '.gz'
+        })
+      );
+    }
   }
 
   return {
@@ -69,9 +77,8 @@ export default defineConfig(({ command, mode }) => {
       preprocessorOptions: {
         scss: {
           api: 'modern-compiler',
-          additionalData: `
-            @use "@/styles/variables.scss" as *;
-          `
+          silenceDeprecations: ['legacy-js-api'],
+          additionalData: `@use "@/styles/variables.scss" as *;`
         }
       }
     },
@@ -87,7 +94,25 @@ export default defineConfig(({ command, mode }) => {
     },
     build: {
       target: 'es2020',
-      chunkSizeWarningLimit: 2000
+      chunkSizeWarningLimit: 2000,
+      rollupOptions: {
+        output: {
+          // 分包策略
+          manualChunks: {
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            'element-plus': ['element-plus'],
+            'echarts': ['echarts', 'vue-echarts'],
+            'utils': ['axios', 'dayjs', 'nprogress']
+          }
+        }
+      },
+      // 删除console
+      terserOptions: dropConsole ? {
+        compress: {
+          drop_console: true,
+          drop_debugger: true
+        }
+      } : undefined
     },
     server: {
       port: 8083,

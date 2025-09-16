@@ -1,5 +1,6 @@
 export { setPageTitle } from './page-title-util.ts';
 export { getToken, setToken, removeToken } from './token-util.ts';
+export { request, get, post, put, del, upload, download } from './request.ts';
 export {
   eachTree,
   getRoutePath,
