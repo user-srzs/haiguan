@@ -1,12 +1,11 @@
 /**
  * ElementPlus/EleAdminPlus/Dayjs国际化配置
  */
-import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import type { RouteLocationNormalized } from 'vue-router';
-import { I18N_CACHE_NAME } from '@/config/setting';
-import { setPageTitle } from '@/utils/page-title-util';
+import { I18N_CACHE_NAME } from '@/config/seeting.ts';
+import { setPageTitle } from '@/utils/index.ts';
 import type { Language } from 'element-plus/es/locale';
 // ElementPlus
 import zh_CN from 'element-plus/es/locale/lang/zh-cn';
@@ -17,25 +16,22 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import 'dayjs/locale/zh-tw';
 const elLocales = { zh_CN, zh_TW, en };
-const eleLocales = { zh_CN: eleZh_CN, zh_TW: eleZh_TW, en: eleEn };
 
 export function useLocale() {
   const { currentRoute } = useRouter();
   const { locale } = useI18n();
   const elLocale = ref<Language>();
-  const eleLocale = ref<EleLocale>();
 
   watch(
     locale,
     () => {
       elLocale.value = elLocales[locale.value];
-      eleLocale.value = eleLocales[locale.value];
       dayjs.locale(locale.value.toLowerCase().replace(/_/g, '-'));
       setPageTitle(getRouteTitle(currentRoute.value));
     },
     { immediate: true }
   );
-  return { elLocale, eleLocale };
+  return { elLocale };
 }
 
 /**

@@ -1,4 +1,4 @@
-// import userMenus from '@/router/modules';
+import userMenus from '@/router/modules/index.ts';
 
 /** 接口地址 */
 export const API_BASE_URL: string = import.meta.env.VITE_API_URL;
@@ -13,13 +13,14 @@ export const VITE_API_URL_BASE: string = import.meta.env.VITE_API_URL_BASE;
 export const VITE_API_URL_USER: string = import.meta.env.VITE_API_URL_USER;
 
 /** 项目api customs(海关)服务代理 base地址 */
-export const VITE_API_URL_CUSTOMS: string = import.meta.env.VITE_API_URL_CUSTOMS;
+export const VITE_API_URL_CUSTOMS: string = import.meta.env
+  .VITE_API_URL_CUSTOMS;
 
 /** 不需要登录的路由 */
-export const WHITE_LIST: string[] = ['/login', '/forget', '/callback'];
+export const WHITE_LIST: string[] = ['/login'];
 
 /** 首页路径, 为空则取第一个菜单的地址 */
-export const HOME_PATH: string = '/machinery';
+export const HOME_PATH: string = '/home';
 
 /** 外层布局的路由地址 */
 export const LAYOUT_PATH = '/';
@@ -37,7 +38,7 @@ export const ROLES_CACHE_NAME = 'roles';
 export const USER_CACHE_NAME = 'user';
 
 /** 菜单 */
-export const USER_MENUS = [];
+export const USER_MENUS = userMenus;
 
 /** 主题配置本地缓存的名称 */
 export const THEME_CACHE_NAME = 'theme';

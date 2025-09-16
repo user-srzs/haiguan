@@ -6,6 +6,11 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["vite/client"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -30,7 +35,10 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "src/*.d.ts",
-    "components.d.ts",
+    "types/*.d.ts",
+    "types/**/*.d.ts",
+    "*.d.ts",
+    "**/*.d.ts",
     "vite.config.ts"
   ],
   "exclude": ["node_modules", "dist", "**/*.js"]

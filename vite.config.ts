@@ -1,42 +1,56 @@
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { resolve } from "path";
+import { resolve } from 'path';
 import Compression from 'vite-plugin-compression';
+import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
-import vueSetupExtend from 'vite-plugin-vue-setup-extend'
+import vueSetupExtend from 'vite-plugin-vue-setup-extend';
 
 /**
  * 配置项
  * @param command 命令 运行时参数 serve / build
  */
-export default defineConfig(({ command, mode, ssrBuild}) => {
+export default defineConfig(({ command, mode }) => {
   // 加载环境变量
   const env = loadEnv(mode, process.cwd(), '');
   // 执行打包命令，生产环境配置
-  const isBuild = command === 'build'
+  const isBuild = command === 'build';
   // 别名
   const alias = {
     '@/': resolve('src') + '/',
     'vue-i18n': 'vue-i18n/dist/vue-i18n.cjs.js'
-  }
+  };
   // 插件
-  const plugins = [vue(), vueSetupExtend()]
+  const plugins = [
+    vue(),
+    vueSetupExtend(),
+    AutoImport({
+      // 自动引入组件
+      dts: true,
+      vueTemplate: true,
+      imports: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+      resolvers: [ElementPlusResolver()]
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()] // 按需引入
+    })
+  ];
   // 服务代理Ip
-  let targetIp = 'http://192.168.8.204:' // 卢成让
+  let targetIp = 'http://192.168.8.204:'; // 卢成让
 
-  if(isBuild) {
+  if (isBuild) {
     // 生产环境服务代理Ip
-    targetIp = 'http://192.168.8.204:'
-    // 按需引入
-    plugins.push(
-      Components({
-        dts: false,
-        resolvers: [ElementPlusResolver({
-          importStyle: 'sass'
-        })]
-      })
-    );
+    targetIp = 'http://192.168.8.204:';
+    // // 按需引入
+    // plugins.push(
+    //   Components({
+    //     dts: false,
+    //     resolvers: [ElementPlusResolver({
+    //       importStyle: 'sass'
+    //     })]
+    //   })
+    // );
     // gzip压缩
     plugins.push(
       Compression({
@@ -54,11 +68,12 @@ export default defineConfig(({ command, mode, ssrBuild}) => {
     css: {
       preprocessorOptions: {
         scss: {
+          api: 'modern-compiler',
           additionalData: `
-            @import "./src/style/index.scss";
-          `,
-        },
-      },
+            @use "@/styles/variables.scss" as *;
+          `
+        }
+      }
     },
     optimizeDeps: {
       include: [
@@ -89,5 +104,5 @@ export default defineConfig(({ command, mode, ssrBuild}) => {
         }
       }
     }
-  }
-})
+  };
+});

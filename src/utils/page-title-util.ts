@@ -1,4 +1,4 @@
-import { PROJECT_NAME } from '@/config/setting';
+import { PROJECT_NAME } from '@/config/seeting.ts';
 
 /**
  * 修改浏览器标题

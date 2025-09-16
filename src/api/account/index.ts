@@ -14,7 +14,7 @@ enum UrlPath {
   // 吊销Token
   revokeToken = `/api/Account/RevokeToken`,
   // 更改密码
-  changePwd = `/api/Account/ChangePwd`,
+  changePwd = `/api/Account/ChangePwd`
 }
 
 /**

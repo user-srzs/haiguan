@@ -2,15 +2,13 @@
  * 登录用户状态管理
  */
 import { defineStore } from 'pinia';
-import { mapTree, isExternalLink } from 'ele-admin-plus/es';
-import type { MenuItem } from 'ele-admin-plus/es/ele-pro-layout/types';
-import type { ProfileDto } from '@/api/user/model';
-import type { AreaWholeParentsDto, DistrictDto } from '@/api/districts/model';
-import type { Menu } from '@/api/system/model';
-import type { AsseterDTO } from '@/api/fields/model';
-import { getRoles } from '@/utils/token-util';
-import { USER_MENUS } from '@/config/setting';
-import { filterAsyncRoutes } from '@/utils/router-util';
+import { mapTree, isExternalLink } from '@/utils/index.ts';
+import type { MenuItem } from '@/router/model.ts';
+// import type { ProfileDto } from '@/api/user/model';
+// import type { AreaWholeParentsDto, DistrictDto } from '@/api/districts/model';
+// import type { AsseterDTO } from '@/api/fields/model';
+import { filterAsyncRoutes } from '@/utils/router-util.ts';
+import { USER_MENUS } from '@/config/seeting.ts';
 
 export interface TypeDto {
   /** Id */
@@ -113,7 +111,12 @@ function formatMenus(data: Menu[], childField = 'children') {
       const menu: MenuItem = {
         path: item.path,
         component: item.component,
-        meta: { title: item.title, icon: item.icon, hide: !!item.hide, ...meta }
+        meta: {
+          title: item.title,
+          icon: item.icon,
+          hide: !!item.hide,
+          ...meta
+        }
       };
       const children = item[childField]
         ? item[childField].filter((d: any) => !(d.meta?.hide ?? d.hide))

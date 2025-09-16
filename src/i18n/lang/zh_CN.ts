@@ -1,9 +1,5 @@
 export const zh_CN = {
   layout: {
-
-
-
-
     home: '主页',
     header: {
       profile: '个人中心',

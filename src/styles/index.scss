@@ -1,4 +1,6 @@
-@import "./reset.scss";
+@use './reset.scss' as *;
+@use 'element-plus/theme-chalk/src/mixins/function.scss' as *;
+@use './variables.scss' as *;
 
 * {
   outline: none;
