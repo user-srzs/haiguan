@@ -40,6 +40,9 @@ export const ROLES_CACHE_NAME = 'roles';
 /** 用户本地缓存的名称 */
 export const USER_CACHE_NAME = 'user';
 
+/** 用户本地缓存的名称 */
+export const MENUS_CACHE_NAME = 'menus';
+
 /** 菜单 */
 export const USER_MENUS = userMenus;
 

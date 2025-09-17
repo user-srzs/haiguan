@@ -4,11 +4,14 @@
 import { defineStore } from 'pinia';
 import { mapTree, isExternalLink, removeToken } from '@/utils/index.ts';
 import type { MenuItem } from '@/router/model.ts';
-// import type { ProfileDto } from '@/api/user/model';
-// import type { AreaWholeParentsDto, DistrictDto } from '@/api/districts/model';
-// import type { AsseterDTO } from '@/api/fields/model';
 import { filterAsyncRoutes } from '@/utils/router-util.ts';
-import { USER_MENUS } from '@/config/seeting.ts';
+import {
+  MENUS_CACHE_NAME,
+  ROLES_CACHE_NAME,
+  USER_CACHE_NAME,
+  USER_MENUS
+} from '@/config/seeting.ts';
+import { RoleDto, UserDto } from '@/api/account/model.ts';
 
 export interface TypeDto {
   /** Id */
@@ -17,32 +20,40 @@ export interface TypeDto {
   label?: string;
 }
 export interface UserState {
-  info: ProfileDto | null;
-  menus: MenuItem[] | null;
+  // 当前登录用户信息
+  user: UserDto | null;
+  // 当前登录用户角色信息
+  roles: RoleDto | null;
   authorities: (string | undefined)[];
-  roles: (string | undefined)[];
-  currentDistrict: AreaWholeParentsDto;
-  districtsTree: DistrictDto[];
-  typeOptions: TypeDto[];
-  asseterOptions: AsseterDTO[];
+  // 菜单列表
+  menus: MenuItem[] | null;
+  // 菜单权限
+  menusPermissions: [];
+  // 能源权限 <水,点,燃气>
+  energyPermissions: string;
+  // 按钮权限
+  buttonPermissions: string[];
+  // 数据权限
+  dataPermissions: string[];
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
-    /** 当前登录用户的信息 */
-    info: null,
-    /** 当前登录用户的菜单 */
-    menus: null,
-    /** 当前登录用户的权限 */
+    // 当前登录用户信息
+    user: null,
+    // 当前登录用户角色信息
+    roles: null,
     authorities: [],
-    /** 当前登录用户的角色 */
-    roles: [],
-    /** 用户当前行政区树结构 */
-    districtsTree: [],
-    /** 作业类型选择 */
-    typeOptions: [],
-    /** 所有资产用户 */
-    asseterOptions: []
+    // 菜单列表
+    menus: null,
+    // 菜单权限
+    menusPermissions: [],
+    // 能源权限 <水,点,燃气>
+    energyPermissions: '',
+    // 按钮权限
+    buttonPermissions: [],
+    // 数据权限
+    dataPermissions: []
   }),
   actions: {
     /**
@@ -58,7 +69,7 @@ export const useUserStore = defineStore('user', {
     /**
      * 更新用户信息
      */
-    setInfo(value: ProfileDto) {
+    setUser(value: UserDto) {
       this.info = value;
     },
     /**
@@ -67,30 +78,53 @@ export const useUserStore = defineStore('user', {
     setMenus(menus: MenuItem[] | null) {
       this.menus = menus;
     },
-    /**
-     * 更新用户区域对象
-     */
-    setCurrentDistrict(currentDistrict: AreaWholeParentsDto) {
-      this.currentDistrict = currentDistrict;
-    },
-    /**
-     * 更新用户区域树
-     */
-    setDistrictsTree(districtsTree: DistrictDto[]) {
-      this.districtsTree = districtsTree;
-    },
-    setTypeOptions(typeOptions: TypeDto[]) {
-      this.typeOptions = typeOptions;
-    },
-    setAsseterOptions(asseterOptions: AsseterDTO[]) {
-      this.asseterOptions = asseterOptions;
-    },
+    /** 重置 user store */
+    clearUser() {
+      this.$reset();
+    }
   },
-  persist: {
-    key: 'districtsTree',
-    storage: sessionStorage,
-    pick: ['districtsTree', 'typeOptions', 'currentDistrict', 'asseterOptions']
-  }
+  persist: [
+    {
+      key: USER_CACHE_NAME,
+      storage: localStorage,
+      pick: ['user']
+    },
+    {
+      key: ROLES_CACHE_NAME,
+      storage: localStorage,
+      pick: ['roles']
+    },
+    {
+      key: MENUS_CACHE_NAME,
+      storage: localStorage,
+      pick: ['menus']
+    },
+    {
+      key: 'authorities',
+      storage: localStorage,
+      pick: ['authorities']
+    },
+    {
+      key: 'menusPermissions',
+      storage: localStorage,
+      pick: ['menusPermissions']
+    },
+    {
+      key: 'energyPermissions',
+      storage: localStorage,
+      pick: ['energyPermissions']
+    },
+    {
+      key: 'buttonPermissions',
+      storage: localStorage,
+      pick: ['buttonPermissions']
+    },
+    {
+      key: 'dataPermissions',
+      storage: localStorage,
+      pick: ['dataPermissions']
+    }
+  ]
 });
 
 /**

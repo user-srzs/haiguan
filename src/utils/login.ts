@@ -1,7 +1,21 @@
 import { removeToken } from '@/utils/token-util.ts';
 import { useUserStore } from '@/stores/modules/user.ts';
 import { getBaseServiceUrl } from '@/config/env.ts'
+import CryptoJS from 'crypto-js';
 import type { Router } from 'vue-router';
+
+/**
+ * 登录账户和密码加密
+ */
+export function encryptByEcb(param: string, keyStr: string = 'kEKWCHrDooWtfeSx') {
+  const keyHex = CryptoJS.enc.Utf8.parse(keyStr); // 秘钥
+  const data = CryptoJS.enc.Utf8.parse(param);
+  const dataEncrypted = CryptoJS.AES.encrypt(data, keyHex, {
+    mode: CryptoJS.mode.ECB, // 加密模式
+    padding: CryptoJS.pad.Pkcs7,
+  });
+  return dataEncrypted.toString();
+}
 
 /**
  * 退出登录

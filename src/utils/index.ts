@@ -5,7 +5,7 @@ export { request };
 export { setPageTitle } from './page-title-util.ts';
 export { getToken, setToken, removeToken } from './token-util.ts';
 export { downloadByUrl, downloadByData, handleDownload, downloadFile } from './download.ts'
-export { logout } from './login.ts';
+export { logout, encryptByEcb } from './login.ts';
 export { toURLSearch, transformParams, isBlobFile, getObjectParamsArray } from './public.ts'
 export { filterAsyncRoutes } from './router-util.ts';
 export {

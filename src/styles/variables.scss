@@ -2,7 +2,7 @@
 @forward 'element-plus/theme-chalk/src/common/var.scss' with (
   $colors: (
     'primary': (
-      'base': #1677ff
+      'base': #6e20d1
     ),
     'success': (
       'base': #52c41a
@@ -22,7 +22,9 @@
     'regular': rgba(0, 0, 0, 0.88),
     'secondary': rgba(0, 0, 0, 0.6),
     'placeholder': rgba(0, 0, 0, 0.36),
-    'disabled': rgba(0, 0, 0, 0.28)
+    'disabled': rgba(0, 0, 0, 0.28),
+    'input': #606266,
+    'text': #939697
   ),
   $border-color: (
     '': #d9d9d9,

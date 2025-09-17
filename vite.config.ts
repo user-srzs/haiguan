@@ -41,7 +41,8 @@ export default defineConfig(({ command, mode }) => {
     })
   ];
   // 服务代理Ip
-  let targetIp = 'http://192.168.8.204:'; // 卢成让
+  // let targetIp = 'http://192.168.8.204:'; // 卢成让
+  let targetIp = 'http://192.168.8.47:'; // 王浩权
   // 生产环境配置
   if (isBuild) {
     // 生产环境服务代理Ip
