@@ -32,7 +32,7 @@ export const REDIRECT_PATH = '/redirect';
 export const TOKEN_HEADER_NAME = 'Authorization';
 
 /** token本地缓存的名称 */
-export const TOKEN_CACHE_NAME = 'token';
+export const TOKEN_CACHE_NAME = 'authorization';
 
 /** 角色本地缓存的名称 */
 export const ROLES_CACHE_NAME = 'roles';

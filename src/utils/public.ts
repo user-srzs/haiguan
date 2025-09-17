@@ -71,3 +71,38 @@ export function getObjectParamsArray(obj: Record<string, any>) {
   });
   return result;
 }
+
+/**
+ * 只复制目标对象中已存在的字段
+ * @param target 目标对象
+ * @param source 源对象
+ * @param exclude 排除的字段
+ * @param options 选项
+ * @param options.overwriteUndefined 是否允许覆盖undefined
+ * @returns 目标对象
+ */
+export function formAssignObject(
+  target: Record<string, any>,
+  source: Record<string, any>,
+  exclude: string[] = [],
+  options: Record<string, any> = { }
+): Record<string, any> {
+  const { overwriteUndefined = true } = options;
+  // 获取目标对象的所有键
+  const targetKeys = Object.keys(target);
+  for (let i = 0; i < targetKeys.length; ++i) {
+    const key = targetKeys[i];
+    // 跳过排除的属性
+    if (exclude.includes(key)) continue;
+    // 检查源对象是否有该属性
+    if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+    const sourceValue = source[key];
+    // 如果源值是undefined且不允许覆盖，则跳过
+    if (sourceValue === undefined && !overwriteUndefined) continue;
+    // 赋值
+    target[key] = sourceValue;
+  }
+  return target;
+}
+
+

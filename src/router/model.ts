@@ -39,3 +39,47 @@ export interface MenuMeta extends Record<string, any> {
   /** 菜单扩展 */
   [key: string]: any;
 }
+
+/**
+ * 菜单数据
+ */
+export interface MenuDto {
+  /** 菜单id */
+  id: number;
+  /** 菜单中文名称 */
+  label: string;
+  /** 菜单英语名称 */
+  menuEng: string;
+  /** 菜单图标 */
+  menuIcon?: string;
+  /** 菜单排序 */
+  menuOrder?: number;
+  /** 菜单地址 */
+  menuUrl: string;
+  /** 父级菜单id */
+  parentId: number;
+  /** 子级 */
+  children?: Array<MenuDto> | null;
+}
+
+/**
+ * 菜单数据
+ */
+export interface Menu {
+  /** 菜单id */
+  id: number;
+  /** 菜单中文名称 */
+  title: string;
+  /** 菜单英语名称 */
+  menuEng: string;
+  /** 菜单图标 */
+  icon?: string;
+  /** 菜单排序 */
+  order?: number;
+  /** 菜单地址 */
+  path: string;
+  /** 父级菜单id */
+  parentId: number;
+  /** 子级 */
+  children?: Array<MenuDto> | null;
+}

@@ -6,7 +6,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
 import { WHITE_LIST, REDIRECT_PATH, LAYOUT_PATH, HOME_PATH } from '@/config/seeting.ts';
 import { routes, getMenuRoutes } from "./router"
-import { setPageTitle, getToken } from "@/utils/index.ts"
+import {setPageTitle, getToken, removeToken} from "@/utils/index.ts"
 import { getRouteTitle } from "@/i18n/use-locale.ts"
 import { useUserStore } from '@/stores/modules/user.ts';
 
@@ -29,7 +29,7 @@ const router = createRouter({
 });
 
 // 路由守卫-前置守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach((to) => {
   // 显示进度条（排除刷新路径）
   if (!to.path.includes(REDIRECT_PATH)) {
     NProgress.start();
@@ -38,59 +38,59 @@ router.beforeEach(async (to, from, next) => {
 
   const token = getToken();
   const userStore = useUserStore();
-
+  debugger;
   // 如果没有token
   if (!token) {
     // 白名单页面直接放行
     if (WHITE_LIST.includes(to.path)) {
-      return next();
+      return;
     }
     
     // 非白名单页面跳转到登录页
     const query = to.path === LAYOUT_PATH ? {} : {
       from: encodeURIComponent(to.fullPath)
     };
-    return next({
+    return {
       path: '/login',
       query
-    });
+    };
   }
 
   // 有token但访问登录页，重定向到首页
   if (to.path === '/login') {
-    return next({ path: from.path || HOME_PATH });
+    return { path: HOME_PATH || '/'};
   }
 
   // 检查是否已加载用户菜单
   if (!userStore.menus) {
     try {
       const { menus, homePath } = userStore.getMenus();
-      
       if (menus && menus.length > 0) {
         // 动态添加路由
         const menuRoutes = getMenuRoutes(menus, homePath);
         menuRoutes.forEach((route: RouteRecordRaw) => {
           router.addRoute(route);
         });
-        
+
         // 确保路由已添加后再跳转
-        return next({ ...to, replace: true });
+        return { ...to, replace: true };
       } else {
         // 没有菜单，跳转到404页面
-        return next('/404');
+        return '/404';
       }
     } catch (error) {
       console.error('获取用户菜单失败:', error);
       // 获取菜单失败，清除token并跳转到登录页
-      userStore.logout();
-      return next('/login');
+      userStore().clearUser();
+      removeToken();
+      return '/login';
     }
   }
   // // 检查路由权限
   // if (to.meta?.requiresAuth !== false && !hasRoutePermission(to, userStore.menus)) {
-  //   return next('/403');
+  //   return '/403';
   // }
-  next();
+  return;
 });
 
 /**

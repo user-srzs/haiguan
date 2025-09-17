@@ -7,24 +7,40 @@
   import type { FormInstance, FormRules } from 'element-plus';
   import type { LoginResult } from '@/api/account/model.ts';
   import { login } from '@/api/account';
-
+  import {useUserStore} from "@/stores/modules/user.ts";
+  import {HOME_PATH} from "@/config/seeting.ts";
+  import router from "@/router";
+  const userStore = useUserStore();
+  /** 账号密码表单ref */
   const formRef = ref<FormInstance | null>(null);
-
+  /** 账号密码表单数据 */
   const form = reactive<Form>({
     username: '',
     password: ''
     // code: ''
   });
-
+  /** 账号密码 */
   const rules = computed<FormRules<Form>>(() => {
     return {
       username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
       password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
     };
   });
-
-  const loginHeaderIcon = ref<string>('qr');
-
+  /** 手机号登录表单ref */
+  const mobileFormRef = ref<FormInstance | null>(null);
+  /** 手机号登录表单数据 */
+  const mobileForm = reactive<Form>({
+    mobile: '',
+    code: ''
+  });
+  /** 手机号登录表单校验规则 */
+  const mobileRules = computed<FormRules<Form>>(() => {
+    return {
+      mobile: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
+      code: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
+    };
+  });
+  /** tab列表数据(账号密码/手机号) */
   const tabList = reactive<TableItem[]>([
     {
       key: 'account',
@@ -35,14 +51,16 @@
       name: '手机号登录'
     }
   ]);
-
+  /** 当前tab(账号密码/手机号登录) */
   const activeTab = ref<string>(tabList[0].key);
-
+  /** 手机号登录表单校验规则 */
   const changeTab = (item: TableItem) => {
     const { key } = item;
     activeTab.value = key;
   };
-
+  /** 当前图标pc or qr */
+  const loginHeaderIcon = ref<string>('qr');
+  /** 切换pc(输入账号密码or手机号登录) or qr(扫描二维码登录) */
   const changeQrCode = () => {
     // 切换 loginHeaderIcon 的值
     if (loginHeaderIcon.value === 'pc') {
@@ -51,37 +69,45 @@
       loginHeaderIcon.value = 'pc';
     }
   };
-
+  /** 记住密码复选框 */
   const checked = ref<boolean>(false);
-
+  /** 登录加载状态 */
   const loading = ref<boolean>(false);
   /** 登录提交 */
   const submit = () => {
-    formRef.value?.validate(async (valid: boolean | null) => {
-      if (!valid) return;
-      try {
-        loading.value = true;
-        const formData = {
-          username: encryptByEcb(form.username),
-          password: encryptByEcb(form.password)
-        };
-        const res = await login(formData);
-        await handleSetData(res);
-      } finally {
-        loading.value = false;
-      }
-    });
+    if(activeTab.value === 'account') {
+      formRef.value?.validate(async (valid: boolean | null) => {
+        if (!valid) return;
+        try {
+          loading.value = true;
+          const formData = {
+            username: encryptByEcb(form.username),
+            password: encryptByEcb(form.password)
+          };
+          const res = await login(formData);
+          await handleSetData(res)
+          ElMessage.success('登录成功');
+          goHome();
+        } finally {
+          loading.value = false;
+        }
+      });
+    }
   };
   /** 登录成功存储数据 */
   const handleSetData = async (res: LoginResult) => {
-    console.log('res', res);
     const { result } = res;
     const { Authorization, role, user } = result || {};
     setToken(Authorization, true);
+    userStore.setUser(user);
+    userStore.setRoles(role);
   };
+  /** 登录成功跳转 */
+  const goHome = () => {
+    router.push(HOME_PATH || '/');
+  }
 
   onMounted(() => {
-    // activeTab.value = tabList[0].key;
   });
 </script>
 
@@ -106,20 +132,12 @@
           </Transition>
         </div>
       </div>
-      <el-form
-        v-if="loginHeaderIcon === 'qr'"
-        ref="formRef"
-        size="large"
-        :model="form"
-        :rules="rules"
-        class="login-form"
-        @keyup.enter.prevent="submit"
-      >
-        <el-row>
-          <el-col class="header-title">
+      <template v-if="loginHeaderIcon === 'qr'">
+        <div class="login-account-wrapper">
+          <div class="header-title">
             <div class="text">{{ '智慧物流园区运管一体化系统' }}</div>
-          </el-col>
-          <el-col class="header-tabs">
+          </div>
+          <div class="header-tabs">
             <div
               v-for="item in tabList"
               :key="item.key"
@@ -128,45 +146,94 @@
             >
               {{ item.name }}
             </div>
-          </el-col>
-          <el-col>
-            <el-form-item prop="username">
-              <el-input
-                v-model="form.username"
-                placeholder="账号"
-                :prefix-icon="UserFilled"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col>
-            <el-form-item prop="password">
-              <el-input
-                v-model="form.password"
-                type="password"
-                placeholder="密码"
-                show-password
-                :prefix-icon="Lock"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col class="login-button-wrapper">
+          </div>
+          <el-form
+            v-if="activeTab === 'account'"
+            ref="formRef"
+            size="large"
+            :model="form"
+            :rules="rules"
+            class="login-form"
+            @keyup.enter.prevent="submit"
+          >
+            <el-row>
+              <el-col>
+                <el-form-item prop="username">
+                  <el-input
+                    v-model="form.username"
+                    placeholder="账号"
+                    :prefix-icon="UserFilled"
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col>
+                <el-form-item prop="password">
+                  <el-input
+                    v-model="form.password"
+                    type="password"
+                    placeholder="密码"
+                    show-password
+                    :prefix-icon="Lock"
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+          <el-form
+            v-if="activeTab === 'mobile'"
+            ref="mobileFormRef"
+            size="large"
+            :model="mobileForm"
+            :rules="mobileRules"
+            class="login-form"
+            @keyup.enter.prevent="submit"
+          >
+            <el-row>
+              <el-col>
+                <el-form-item prop="mobile">
+                  <el-input
+                    v-model="form.mobile"
+                    placeholder="手机号"
+                    :prefix-icon="UserFilled"
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item prop="code">
+                  <el-input
+                    v-model="form.code"
+                    placeholder="验证码"
+                    show-password
+                    :prefix-icon="Lock"
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12" style="text-align: end;">
+                <el-button>{{ '点击获取验证码' }}</el-button>
+              </el-col>
+            </el-row>
+          </el-form>
+          <div class="login-button-wrapper">
             <el-button
               type="primary"
               class="login-button"
               @click="submit"
               :loading="loading"
-              >登录</el-button
-            >
-          </el-col>
-          <el-col class="forget-password-wrapper">
+            >登录</el-button>
+          </div>
+          <div v-if="activeTab === 'account'" class="forget-password-wrapper">
             <div class="forget-password">
               <el-checkbox v-model="checked">{{ '记住密码' }}</el-checkbox>
             </div>
-          </el-col>
-        </el-row>
-      </el-form>
+          </div>
+        </div>
+      </template>
+
+
       <div v-if="loginHeaderIcon === 'pc'"></div>
     </div>
   </div>
@@ -218,7 +285,7 @@
     }
   }
 
-  .login-form {
+  .login-account-wrapper {
     box-sizing: border-box;
     height: calc(100% - 82px);
     padding: 0 48px 48px;

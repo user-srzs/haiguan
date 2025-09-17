@@ -2,7 +2,7 @@
  * 登录用户状态管理
  */
 import { defineStore } from 'pinia';
-import { mapTree, isExternalLink, removeToken } from '@/utils/index.ts';
+import { mapTree, isExternalLink } from '@/utils/index.ts';
 import type { MenuItem } from '@/router/model.ts';
 import { filterAsyncRoutes } from '@/utils/router-util.ts';
 import {
@@ -24,7 +24,7 @@ export interface UserState {
   user: UserDto | null;
   // 当前登录用户角色信息
   roles: RoleDto | null;
-  authorities: (string | undefined)[];
+  authorities: Array<string | undefined> | null;
   // 菜单列表
   menus: MenuItem[] | null;
   // 菜单权限
@@ -60,23 +60,62 @@ export const useUserStore = defineStore('user', {
      * 请求登录用户的个人信息/权限/角色/菜单
      */
     getMenus() {
-      const roles: string[] | undefined = getRoles()?.split(',');
-      const filterRoutes = filterAsyncRoutes(USER_MENUS, roles);
+      // const roles: string[] | undefined = getRoles()?.split(',');
+      const filterRoutes = filterAsyncRoutes(USER_MENUS, []);
       const { menus, homePath } = formatMenus(filterRoutes);
       this.setMenus(menus);
       return { menus, homePath };
+      // this.setMenus(USER_MENUS)
+      // return {
+      //   menus: USER_MENUS,
+      //   homePath: '/home'
+      // }
     },
     /**
      * 更新用户信息
      */
     setUser(value: UserDto) {
-      this.info = value;
+      this.user = value;
+    },
+    /**
+     * 获取当前登录用户的角色信息
+     */
+    setRoles(value: RoleDto | null) {
+      this.roles = value;
+    },
+    /** 更新用户权限 */
+    setAuthorities(value: Array<string | undefined> | null) {
+      this.authorities = value;
     },
     /**
      * 更新菜单数据
      */
     setMenus(menus: MenuItem[] | null) {
       this.menus = menus;
+    },
+    /**
+     * 获取当前登录用户的菜单权限
+     */
+    setMenuPermissions(menus: MenuItem[] | null) {
+      this.menus = menus;
+    },
+    /**
+     * 获取当前登录用户的能源权限
+     */
+    setEnergyPermissions(value: string) {
+      this.energyPermissions = value;
+    },
+    /**
+     * 获取当前登录用户的按钮权限
+     */
+    setButtonPermissions(value: string[]) {
+      this.buttonPermissions = value;
+    },
+    /**
+     * 获取当前登录用户的数据权限
+     */
+    setDataPermissions(value: string[]) {
+      this.dataPermissions = value;
     },
     /** 重置 user store */
     clearUser() {
