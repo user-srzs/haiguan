@@ -1,5 +1,5 @@
 // 是否有权限
-export const hasPermission = (route: any, roles: string[] | undefined) => {
+const hasPermission = (route: any, roles: string[] | undefined) => {
   if (route.meta && route.meta.roles) {
     return roles?.some((role) => route.meta.roles.includes(role));
   } else {

@@ -1,39 +1,39 @@
 <template>
   <div class="exception-page">
-    <div class="exception-content">
-      <div class="exception-image">
-        <img src="/images/403.svg" alt="403" />
-      </div>
-      <div class="exception-info">
+    <el-result title="404">
+      <template #icon>
+        <div style="width: 250px; height: 295px; margin: 20px 0 10px 0">
+          <icon-svg />
+        </div>
+      </template>
+      <template #sub-title>
         <h1>403</h1>
         <h2>抱歉，您没有权限访问此页面</h2>
         <p>请联系管理员获取相应权限，或返回首页继续浏览</p>
-        <div class="exception-actions">
-          <el-button type="primary" @click="goHome">
-            返回首页
-          </el-button>
-          <el-button @click="goBack">
-            返回上页
-          </el-button>
-        </div>
-      </div>
-    </div>
+      </template>
+      <template #extra>
+        <router-link to="/" style="display: inline-flex; text-decoration: none">
+          <el-button type="primary">返回首页</el-button>
+        </router-link>
+      </template>
+    </el-result>
   </div>
 </template>
 
 <script setup lang="ts" name="Exception403">
-import { useRouter } from 'vue-router';
-import { HOME_PATH } from '@/config/seeting';
+// import { useRouter } from 'vue-router';
+// import { HOME_PATH } from '@/config/seeting';
+import IconSvg from './components/icon-svg.vue';
 
-const router = useRouter();
+// const router = useRouter();
 
-const goHome = () => {
-  router.push(HOME_PATH);
-};
+// const goHome = () => {
+//   router.push(HOME_PATH);
+// };
 
-const goBack = () => {
-  router.go(-1);
-};
+// const goBack = () => {
+//   router.go(-1);
+// };
 </script>
 
 <style lang="scss" scoped>

@@ -28,6 +28,9 @@ export const LAYOUT_PATH = '/';
 /** 刷新路由的路由地址 */
 export const REDIRECT_PATH = '/redirect';
 
+// token 传递的 header 名称
+export const TOKEN_HEADER_NAME = 'Authorization';
+
 /** token本地缓存的名称 */
 export const TOKEN_CACHE_NAME = 'token';
 

@@ -85,16 +85,6 @@ export const useUserStore = defineStore('user', {
     setAsseterOptions(asseterOptions: AsseterDTO[]) {
       this.asseterOptions = asseterOptions;
     },
-    /**
-     * 退出登录
-     */
-    logout() {
-      this.info = null;
-      this.menus = null;
-      this.authorities = [];
-      this.roles = [];
-      removeToken();
-    }
   },
   persist: {
     key: 'districtsTree',

@@ -1,5 +1,5 @@
 <template>
-  <ele-page>
+  <div class="exception-page">
     <el-result title="500">
       <template #icon>
         <div style="width: 250px; height: 295px; margin: 20px 0 10px 0">
@@ -7,7 +7,7 @@
         </div>
       </template>
       <template #sub-title>
-        <ele-text type="placeholder">抱歉, 服务器出错了.</ele-text>
+        <h2 type="placeholder">抱歉, 服务器出错了.</h2>
       </template>
       <template #extra>
         <router-link to="/" style="display: inline-flex; text-decoration: none">
@@ -15,11 +15,19 @@
         </router-link>
       </template>
     </el-result>
-  </ele-page>
+  </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" setup name="Exception500">
   import IconSvg from './components/icon-svg.vue';
-
-  defineOptions({ name: 'Exception500' });
 </script>
+
+<style lang="scss" scoped>
+  .exception-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--el-bg-color);
+  }
+</style>

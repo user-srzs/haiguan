@@ -6,7 +6,6 @@ import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 import vueSetupExtend from 'vite-plugin-vue-setup-extend';
-import { sassSilencePlugin } from './build/plugins/sass-silence';
 
 /**
  * 配置项
@@ -28,7 +27,6 @@ export default defineConfig(({ command, mode }) => {
   };
   // 插件
   const plugins = [
-    sassSilencePlugin(),
     vue(),
     vueSetupExtend(),
     AutoImport({
@@ -44,26 +42,17 @@ export default defineConfig(({ command, mode }) => {
   ];
   // 服务代理Ip
   let targetIp = 'http://192.168.8.204:'; // 卢成让
-
+  // 生产环境配置
   if (isBuild) {
     // 生产环境服务代理Ip
     targetIp = 'http://192.168.8.204:';
-    // // 按需引入
-    // plugins.push(
-    //   Components({
-    //     dts: false,
-    //     resolvers: [ElementPlusResolver({
-    //       importStyle: 'sass'
-    //     })]
-    //   })
-    // );
     // gzip压缩
     if (enableCompress) {
       plugins.push(
         Compression({
           disable: !isBuild,
           threshold: 10240,
-          algorithm: env.VITE_BUILD_COMPRESS_TYPE || 'gzip',
+          algorithm: 'gzip',
           ext: '.gz'
         })
       );

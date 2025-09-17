@@ -27,7 +27,7 @@ export const isProd = (): boolean => {
  * 获取应用名称
  */
 export const getAppName = (): string => {
-  return import.meta.env.VITE_APP_NAME || 'Haiguan App';
+  return import.meta.env.VITE_APP_NAME || 'Customs';
 };
 
 /**
@@ -80,13 +80,6 @@ export const isBuildCompress = (): boolean => {
 };
 
 /**
- * 获取构建压缩类型
- */
-export const getBuildCompressType = (): 'gzip' | 'brotli' | 'both' => {
-  return (import.meta.env.VITE_BUILD_COMPRESS_TYPE as 'gzip' | 'brotli' | 'both') || 'gzip';
-};
-
-/**
  * 是否删除console
  */
 export const isDropConsole = (): boolean => {
@@ -119,7 +112,6 @@ export const envConfig = {
   useMock: isUseMock(),
   usePWA: isUsePWA(),
   buildCompress: isBuildCompress(),
-  buildCompressType: getBuildCompressType(),
   dropConsole: isDropConsole(),
   useBundleAnalyzer: isUseBundleAnalyzer()
 };

@@ -2,9 +2,9 @@
  * 路由配置
  */
 import NProgress from 'nprogress';
-import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import { WHITE_LIST, REDIRECT_PATH, LAYOUT_PATH } from '@/config/seeting.ts';
+import { WHITE_LIST, REDIRECT_PATH, LAYOUT_PATH, HOME_PATH } from '@/config/seeting.ts';
 import { routes, getMenuRoutes } from "./router"
 import { setPageTitle, getToken } from "@/utils/index.ts"
 import { getRouteTitle } from "@/i18n/use-locale.ts"
@@ -76,8 +76,8 @@ router.beforeEach(async (to, from, next) => {
         // 确保路由已添加后再跳转
         return next({ ...to, replace: true });
       } else {
-        // 没有菜单权限，跳转到无权限页面
-        return next('/403');
+        // 没有菜单，跳转到404页面
+        return next('/404');
       }
     } catch (error) {
       console.error('获取用户菜单失败:', error);
@@ -86,39 +86,37 @@ router.beforeEach(async (to, from, next) => {
       return next('/login');
     }
   }
-
-  // 检查路由权限
-  if (to.meta?.requiresAuth !== false && !hasRoutePermission(to, userStore.menus)) {
-    return next('/403');
-  }
-
+  // // 检查路由权限
+  // if (to.meta?.requiresAuth !== false && !hasRoutePermission(to, userStore.menus)) {
+  //   return next('/403');
+  // }
   next();
 });
 
 /**
  * 检查路由权限
  */
-function hasRoutePermission(route: any, menus: any[]): boolean {
-  // 如果路由不需要权限检查，直接返回true
-  if (route.meta?.requiresAuth === false) {
-    return true;
-  }
-
-  // 递归检查菜单中是否存在该路由
-  function checkMenus(menuList: any[]): boolean {
-    return menuList.some(menu => {
-      if (menu.path === route.path) {
-        return true;
-      }
-      if (menu.children && menu.children.length > 0) {
-        return checkMenus(menu.children);
-      }
-      return false;
-    });
-  }
-
-  return checkMenus(menus);
-}
+// function hasRoutePermission(route: any, menus: any[]): boolean {
+//   // 如果路由不需要权限检查，直接返回true
+//   if (route.meta?.requiresAuth === false) {
+//     return true;
+//   }
+//
+//   // 递归检查菜单中是否存在该路由
+//   function checkMenus(menuList: any[]): boolean {
+//     return menuList.some(menu => {
+//       if (menu.path === route.path) {
+//         return true;
+//       }
+//       if (menu.children && menu.children.length > 0) {
+//         return checkMenus(menu.children);
+//       }
+//       return false;
+//     });
+//   }
+//
+//   return checkMenus(menus);
+// }
 
 // 路由守卫-后置守卫
 router.afterEach((to) => {

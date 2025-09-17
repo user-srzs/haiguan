@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cross-env SASS_SILENCE_DEPRECATIONS=legacy-js-api vite --host",
-    "serve": "cross-env SASS_SILENCE_DEPRECATIONS=legacy-js-api vite --host",
-    "build": "cross-env SASS_SILENCE_DEPRECATIONS=legacy-js-api vite build",
+    "dev": "vite --host",
+    "serve": "vite --host",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
