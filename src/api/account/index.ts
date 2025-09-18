@@ -1,6 +1,9 @@
 import request from '@/utils/request';
-import type { LoginArgs, LoginResult } from '@/api/account/model.ts';
-import { MenuDto } from '@/api/account/model.ts';
+import type {
+  LoginArgs,
+  LoginResult,
+  PermissionsResult
+} from '@/api/account/model.ts';
 
 /**
  * Account
@@ -25,5 +28,5 @@ export const login = (data: LoginArgs) => {
  * 获取权限列表(按钮权限，菜单权限，数据权限)
  */
 export const getPermissions = () => {
-  return request.get<MenuDto>(UrlPath.permissions);
+  return request.get<PermissionsResult>(UrlPath.permissions);
 };

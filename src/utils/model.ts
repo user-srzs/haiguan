@@ -1,3 +1,6 @@
+import { MenuItem } from '@/router/model.ts';
+import { RouteComponent } from 'vue-router';
+
 export interface TreeNode {
   [key: string]: any;
   id?: string | number;
@@ -14,3 +17,6 @@ export interface FindTreeResult<T extends TreeNode> {
 export interface RouteComponentResult {
   component?: any;
 }
+
+export type GetComponent = (component?: string, menu?: MenuItem, name?: string) => (() => Promise<RouteComponent>) | RouteComponent | undefined;
+

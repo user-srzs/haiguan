@@ -3,7 +3,9 @@
 </script>
 
 <template>
-  <div>1231231231231</div>
+  <div>1231231231231
+    <router-view />
+  </div>
 <!--  <div :class="classObj" class="app-wrapper">-->
 <!--&lt;!&ndash;    <sidebar class="sidebar-container" />&ndash;&gt;-->
 <!--    <div :class="{ hasTagsView: needTagsView }" class="main-container">-->

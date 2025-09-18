@@ -98,12 +98,14 @@ export default defineConfig(({ command, mode }) => {
         }
       },
       // 删除console
-      terserOptions: dropConsole ? {
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      } : undefined
+      terserOptions: dropConsole
+        ? {
+            compress: {
+              drop_console: true,
+              drop_debugger: true
+            }
+          }
+        : undefined
     },
     server: {
       port: 8083,

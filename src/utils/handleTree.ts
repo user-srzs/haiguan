@@ -1,6 +1,6 @@
 import type { MenuItem } from '@/router/model.ts';
-import type { TreeNode, FindTreeResult, RouteComponentResult } from './model.ts';
-import type { RouteMeta, RouteRecordRaw } from 'vue-router';
+import { TreeNode, FindTreeResult, RouteComponentResult, GetComponent } from './model.ts';
+import type { RouteRecordRaw } from 'vue-router';
 
 /**
  * 递归处理树形结构数据
@@ -75,18 +75,19 @@ export function pascalCase(str: string): string {
  * 获取路由组件，如果是外部链接则不返回组件
  * @param menu - 菜单项
  * @param name - 路由名称
- * @param componentGetter - 获取组件的函数
+ * @param func - 获取组件的函数
  * @returns 包含组件的对象或空对象
  */
 export function getRouteComponent(
   menu: MenuItem,
   name: string,
-  componentGetter: (component: string | undefined, menu: MenuItem, name: string) => any
+  func: GetComponent
 ): RouteComponentResult {
-  if (!menu.component || isExternalLink(menu.component)) {
-    return {}
+  if (!menu.component || !isExternalLink(menu.component)) {
+    return  { component: func(menu.component, menu, name) };
   }
-  return  { component: componentGetter(menu.component, menu, name) };
+  // TODO 外部链接需要额外处理, 暂时不做考虑
+  return {};
 }
 
 /**
@@ -97,27 +98,24 @@ export function getRouteComponent(
  * @returns 路由配置数组
  */
 export function menuToRoutes(
-  menus?: MenuItem[] | null | undefined,
-  getComponent?: (item: MenuItem, name: string) => { component?: any; },
+  menus: MenuItem[] | null | undefined,
+  getComponent: GetComponent,
   added: Array<{ path: string }> = []
 ): RouteRecordRaw[] | undefined {
-  if(!menus?.length) return undefined;
-  const routes: RouteRecordRaw[] = [];
+  if(!menus?.length) return;
+  const routes: Array<RouteRecordRaw> = [];
   const addedRoutes: Array<{ path: string }> = !!added?.length ? [...added] : [];
-
   for(const item of menus) {
-    const meta: RouteMeta = { ...item.meta };
-    const path: string | undefined | null = getRoutePath(meta.routePath || item.path);
+    const meta = { ...item.meta };
+    const path = getRoutePath(meta.routePath || item.path);
     // 跳过无效路径、外部链接或已添加的路径
     if(!path || isExternalLink(path) || pathIsAdd(path, addedRoutes)) {
       continue;
     }
     const name = item.name || pascalCase(path);
     const { component } = getRouteComponent(item, name, getComponent);
-
     addedRoutes.push({ path });
-
-    const route: RouteRecordRaw = {
+    let route: RouteRecordRaw = {
       name,
       path,
       component,
@@ -125,9 +123,9 @@ export function menuToRoutes(
       meta,
       children: menuToRoutes(item.children, getComponent, addedRoutes)
     }
-    routes.push(route)
+    routes.push(route);
   }
-  return routes.length > 0 ? routes : undefined;
+  return routes;
 }
 
 /**

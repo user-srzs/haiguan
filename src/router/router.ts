@@ -3,7 +3,7 @@ import { HOME_PATH, LAYOUT_PATH, REDIRECT_PATH } from '@/config/seeting.ts';
 import Layout from '@/layout/index.vue';
 import RedirectLayout from '@/components/RedirectLayout/index.vue';
 import type { MenuItem } from '@/router/model.ts';
-import { eachTree, menuToRoutes } from "@/utils/index.ts"
+import { eachTree, menuToRoutes } from '@/utils/index.ts';
 const modules = import.meta.glob('/src/views/**/*.vue');
 
 /**
@@ -19,9 +19,8 @@ export const routes: RouteRecordRaw[] = [
   // 404
   {
     path: '/:path(.*)*',
-    name: 'undefined',
     component: () => import('@/views/exception/404/index.vue')
-  },
+  }
 ];
 
 /**
@@ -29,7 +28,10 @@ export const routes: RouteRecordRaw[] = [
  * @param menus 菜单数据
  * @param homePath 主页地址
  */
-export function getMenuRoutes(menus?: MenuItem[], homePath?: string): RouteRecordRaw[] {
+export function getMenuRoutes(
+  menus?: MenuItem[],
+  homePath?: string
+): RouteRecordRaw[] {
   // 子级路由
   const childRoutes: RouteRecordRaw[] = [
     // 用于刷新的路由

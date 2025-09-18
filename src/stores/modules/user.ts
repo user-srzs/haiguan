@@ -11,7 +11,19 @@ import {
   USER_CACHE_NAME,
   USER_MENUS
 } from '@/config/seeting.ts';
-import { RoleDto, UserDto } from '@/api/account/model.ts';
+import { MenuDto, RoleDto, UserDto } from '@/api/account/model.ts';
+
+// 添加 Menu 类型定义
+interface Menu {
+  path: string;
+  component?: string;
+  title: string;
+  icon?: string;
+  hide?: boolean;
+  meta?: any;
+  children?: Menu[];
+  redirect?: string;
+}
 
 export interface TypeDto {
   /** Id */
@@ -28,7 +40,7 @@ export interface UserState {
   // 菜单列表
   menus: MenuItem[] | null;
   // 菜单权限
-  menusPermissions: [];
+  menusPermissions: MenuDto[] | null;
   // 能源权限 <水,点,燃气>
   energyPermissions: string;
   // 按钮权限
@@ -60,16 +72,10 @@ export const useUserStore = defineStore('user', {
      * 请求登录用户的个人信息/权限/角色/菜单
      */
     getMenus() {
-      // const roles: string[] | undefined = getRoles()?.split(',');
       const filterRoutes = filterAsyncRoutes(USER_MENUS, []);
       const { menus, homePath } = formatMenus(filterRoutes);
       this.setMenus(menus);
       return { menus, homePath };
-      // this.setMenus(USER_MENUS)
-      // return {
-      //   menus: USER_MENUS,
-      //   homePath: '/home'
-      // }
     },
     /**
      * 更新用户信息
@@ -96,8 +102,8 @@ export const useUserStore = defineStore('user', {
     /**
      * 获取当前登录用户的菜单权限
      */
-    setMenuPermissions(menus: MenuItem[] | null) {
-      this.menus = menus;
+    setMenuPermissions(menus: MenuDto[] | null) {
+      this.menusPermissions = menus;
     },
     /**
      * 获取当前登录用户的能源权限
@@ -126,42 +132,80 @@ export const useUserStore = defineStore('user', {
     {
       key: USER_CACHE_NAME,
       storage: localStorage,
-      pick: ['user']
+      paths: ['user'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.user),
+        deserialize: (value: string) => ({ user: JSON.parse(value) })
+      }
     },
     {
       key: ROLES_CACHE_NAME,
       storage: localStorage,
-      pick: ['roles']
+      paths: ['roles'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.roles),
+        deserialize: (value: string) => ({ roles: JSON.parse(value) })
+      }
+    },
+    // {
+    //   key: MENUS_CACHE_NAME,
+    //   storage: localStorage,
+    //   paths: ['menus'],
+    //   serializer: {
+    //     serialize: (state: any) => JSON.stringify(state.menus),
+    //     deserialize: (value: string) => ({ menus: JSON.parse(value) })
+    //   }
+    // },
+    {
+      key: 'user-authorities',
+      storage: localStorage,
+      paths: ['authorities'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.authorities),
+        deserialize: (value: string) => ({ authorities: JSON.parse(value) })
+      }
     },
     {
-      key: MENUS_CACHE_NAME,
+      key: 'user-menus-permissions',
       storage: localStorage,
-      pick: ['menus']
+      paths: ['menusPermissions'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.menusPermissions),
+        deserialize: (value: string) => ({
+          menusPermissions: JSON.parse(value)
+        })
+      }
     },
     {
-      key: 'authorities',
+      key: 'user-energy-permissions',
       storage: localStorage,
-      pick: ['authorities']
+      paths: ['energyPermissions'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.energyPermissions),
+        deserialize: (value: string) => ({
+          energyPermissions: JSON.parse(value)
+        })
+      }
     },
     {
-      key: 'menusPermissions',
+      key: 'user-button-permissions',
       storage: localStorage,
-      pick: ['menusPermissions']
+      paths: ['buttonPermissions'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.buttonPermissions),
+        deserialize: (value: string) => ({
+          buttonPermissions: JSON.parse(value)
+        })
+      }
     },
     {
-      key: 'energyPermissions',
+      key: 'user-data-permissions',
       storage: localStorage,
-      pick: ['energyPermissions']
-    },
-    {
-      key: 'buttonPermissions',
-      storage: localStorage,
-      pick: ['buttonPermissions']
-    },
-    {
-      key: 'dataPermissions',
-      storage: localStorage,
-      pick: ['dataPermissions']
+      paths: ['dataPermissions'],
+      serializer: {
+        serialize: (state: any) => JSON.stringify(state.dataPermissions),
+        deserialize: (value: string) => ({ dataPermissions: JSON.parse(value) })
+      }
     }
   ]
 });

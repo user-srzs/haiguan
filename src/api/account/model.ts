@@ -95,3 +95,14 @@ export interface MenuDto {
   /** 子级 */
   children?: Array<MenuDto> | null;
 }
+
+/**
+ * 权限列表
+ */
+export interface PermissionsResult {
+  code: number;
+  buttons: string[] | null;
+  data: string[] | null;
+  entities: Array<MenuDto> | null;
+  success: string;
+}

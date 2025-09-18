@@ -5,8 +5,8 @@
   import qrCodeIcon from '@/assets/login/qrCode.svg';
   import { encryptByEcb, setToken } from '@/utils';
   import type { FormInstance, FormRules } from 'element-plus';
-  import type { LoginResult } from '@/api/account/model.ts';
-  import { login } from '@/api/account';
+  import type { LoginResult, PermissionsResult } from '@/api/account/model.ts';
+  import { getPermissions, login } from '@/api/account';
   import { useUserStore } from '@/stores/modules/user.ts';
   import { HOME_PATH } from '@/config/seeting.ts';
   import router from '@/router';
@@ -101,6 +101,11 @@
     setToken(Authorization, true);
     userStore.setUser(user);
     userStore.setRoles(role);
+    const permissions = await getPermissions();
+    const { buttons, data, entities } = permissions.data as PermissionsResult;
+    userStore.setMenuPermissions(entities);
+    userStore.setDataPermissions(data);
+    userStore.setButtonPermissions(buttons);
   };
   /** 登录成功跳转 */
   const goHome = () => {
