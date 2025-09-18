@@ -4,10 +4,15 @@
 import NProgress from 'nprogress';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import { WHITE_LIST, REDIRECT_PATH, LAYOUT_PATH, HOME_PATH } from '@/config/seeting.ts';
-import { routes, getMenuRoutes } from "./router"
-import {setPageTitle, getToken, removeToken} from "@/utils/index.ts"
-import { getRouteTitle } from "@/i18n/use-locale.ts"
+import {
+  WHITE_LIST,
+  REDIRECT_PATH,
+  LAYOUT_PATH,
+  HOME_PATH
+} from '@/config/seeting.ts';
+import { routes, getMenuRoutes } from './router';
+import { setPageTitle, getToken, removeToken } from '@/utils/index.ts';
+import { getRouteTitle } from '@/i18n/use-locale.ts';
 import { useUserStore } from '@/stores/modules/user.ts';
 
 // 浏览器加载进度条
@@ -38,18 +43,20 @@ router.beforeEach((to) => {
 
   const token = getToken();
   const userStore = useUserStore();
-  debugger;
   // 如果没有token
   if (!token) {
     // 白名单页面直接放行
     if (WHITE_LIST.includes(to.path)) {
       return;
     }
-    
+
     // 非白名单页面跳转到登录页
-    const query = to.path === LAYOUT_PATH ? {} : {
-      from: encodeURIComponent(to.fullPath)
-    };
+    const query =
+      to.path === LAYOUT_PATH
+        ? {}
+        : {
+            from: encodeURIComponent(to.fullPath)
+          };
     return {
       path: '/login',
       query
@@ -58,7 +65,7 @@ router.beforeEach((to) => {
 
   // 有token但访问登录页，重定向到首页
   if (to.path === '/login') {
-    return { path: HOME_PATH || '/'};
+    return { path: HOME_PATH || '/' };
   }
 
   // 检查是否已加载用户菜单
@@ -125,6 +132,6 @@ router.afterEach((to) => {
       NProgress.done(true);
     }, 200);
   }
-})
+});
 
 export default router;

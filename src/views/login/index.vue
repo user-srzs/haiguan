@@ -7,9 +7,9 @@
   import type { FormInstance, FormRules } from 'element-plus';
   import type { LoginResult } from '@/api/account/model.ts';
   import { login } from '@/api/account';
-  import {useUserStore} from "@/stores/modules/user.ts";
-  import {HOME_PATH} from "@/config/seeting.ts";
-  import router from "@/router";
+  import { useUserStore } from '@/stores/modules/user.ts';
+  import { HOME_PATH } from '@/config/seeting.ts';
+  import router from '@/router';
   const userStore = useUserStore();
   /** 账号密码表单ref */
   const formRef = ref<FormInstance | null>(null);
@@ -75,7 +75,7 @@
   const loading = ref<boolean>(false);
   /** 登录提交 */
   const submit = () => {
-    if(activeTab.value === 'account') {
+    if (activeTab.value === 'account') {
       formRef.value?.validate(async (valid: boolean | null) => {
         if (!valid) return;
         try {
@@ -85,7 +85,7 @@
             password: encryptByEcb(form.password)
           };
           const res = await login(formData);
-          await handleSetData(res)
+          await handleSetData(res);
           ElMessage.success('登录成功');
           goHome();
         } finally {
@@ -105,10 +105,9 @@
   /** 登录成功跳转 */
   const goHome = () => {
     router.push(HOME_PATH || '/');
-  }
+  };
 
-  onMounted(() => {
-  });
+  onMounted(() => {});
 </script>
 
 <template>
@@ -212,7 +211,7 @@
                   />
                 </el-form-item>
               </el-col>
-              <el-col :span="12" style="text-align: end;">
+              <el-col :span="12" style="text-align: end">
                 <el-button>{{ '点击获取验证码' }}</el-button>
               </el-col>
             </el-row>
@@ -223,7 +222,8 @@
               class="login-button"
               @click="submit"
               :loading="loading"
-            >登录</el-button>
+              >登录</el-button
+            >
           </div>
           <div v-if="activeTab === 'account'" class="forget-password-wrapper">
             <div class="forget-password">
@@ -232,7 +232,6 @@
           </div>
         </div>
       </template>
-
 
       <div v-if="loginHeaderIcon === 'pc'"></div>
     </div>

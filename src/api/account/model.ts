@@ -73,3 +73,25 @@ export interface UserDto {
   userUuid: string;
   username: string;
 }
+
+/**
+ * 菜单数据
+ */
+export interface MenuDto {
+  /** 菜单id */
+  id: number;
+  /** 菜单中文名称 */
+  label: string;
+  /** 菜单英语名称 */
+  menuEng: string;
+  /** 菜单图标 */
+  menuIcon?: string;
+  /** 菜单排序 */
+  menuOrder?: number;
+  /** 菜单地址 */
+  menuUrl: string;
+  /** 父级菜单id */
+  parentId: number;
+  /** 子级 */
+  children?: Array<MenuDto> | null;
+}

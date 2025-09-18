@@ -1,17 +1,17 @@
 import request from '@/utils/request';
 import type { LoginArgs, LoginResult } from '@/api/account/model.ts';
+import { MenuDto } from '@/api/account/model.ts';
 
 /**
  * Account
  * 账户
  */
-export const url: string = '/api/account';
 
 enum UrlPath {
   // 登录
   login = `/userService/login/webAccount`,
-  // 更改密码
-  changePwd = `/userService/login`
+  // 获取权限列表
+  permissions = `/userService/menuMan/getPermissions`
 }
 
 /**
@@ -19,4 +19,11 @@ enum UrlPath {
  */
 export const login = (data: LoginArgs) => {
   return request.post<LoginResult>(UrlPath.login, data);
+};
+
+/**
+ * 获取权限列表(按钮权限，菜单权限，数据权限)
+ */
+export const getPermissions = () => {
+  return request.get<MenuDto>(UrlPath.permissions);
 };
