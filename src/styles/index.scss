@@ -21,8 +21,24 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
   height: 100%;
   line-height: 1.5;
+  font-family: AlibabaPuHuiTi, sans-serif;
+}
+
+.container {
+  box-sizing: border-box;
+  min-width: 1200px;
+  min-height: 100vh;
+  background: #F2F3F4;
+  padding: 12px;
+}
+
+@media (max-width: 1200px) {
+  .container {
+    // 减去 15px 横向滚动条高度
+    min-height: calc(100vh - 15px);
+  }
 }

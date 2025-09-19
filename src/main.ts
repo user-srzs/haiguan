@@ -10,6 +10,7 @@ import '@vue-flow/core/dist/theme-default.css';
 import 'xgplayer/dist/index.min.css';
 import 'viewerjs/dist/viewer.css';
 import './styles/index.scss';
+import './assets/iconfonts/index.scss'
 import 'element-plus/theme-chalk/display.css';
 import 'element-plus/es/components/collapse/style/index';
 import 'element-plus/es/components/collapse-item/style/index';
@@ -27,9 +28,9 @@ app.config.globalProperties.$userServiceUrl = envConfig.userServiceUrl;
 app.config.globalProperties.$customsServiceUrl = envConfig.customsServiceUrl;
 
 // 全局引入 element plus icon
-Object.keys(ElIcon).forEach((name) => {
-  app.component(name, ElIcon[name]);
-});
+for(const [key,component] of Object.entries(ElIcon)) {
+  app.component(key, component);
+}
 
 app.use(VueViewer);
 app.use(router);

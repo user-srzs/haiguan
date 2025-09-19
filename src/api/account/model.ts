@@ -31,10 +31,11 @@ export interface LoginResult {
 }
 
 export interface ResultDto {
-  Authorization: string;
+  Authorization?: string;
   code: number;
-  role: RoleDto;
-  user: UserDto;
+  msg?: string;
+  role?: RoleDto;
+  user?: UserDto;
   success: string;
 }
 
@@ -101,8 +102,9 @@ export interface MenuDto {
  */
 export interface PermissionsResult {
   code: number;
-  buttons: string[] | null;
-  data: string[] | null;
-  entities: Array<MenuDto> | null;
+  msg?: string;
+  buttons?: string[] | null;
+  data?: string[] | null;
+  entities?: Array<MenuDto> | null;
   success: string;
 }

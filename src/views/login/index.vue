@@ -85,9 +85,14 @@
             password: encryptByEcb(form.password)
           };
           const res = await login(formData);
-          await handleSetData(res);
-          ElMessage.success('登录成功');
-          goHome();
+          try {
+            await handleSetData(res);
+            ElMessage.success('登录成功');
+            await getUserInfo();
+            goHome();
+          }catch (err) {
+            console.log('err', err);
+          }
         } finally {
           loading.value = false;
         }
@@ -95,18 +100,30 @@
     }
   };
   /** 登录成功存储数据 */
-  const handleSetData = async (res: LoginResult) => {
-    const { result } = res;
-    const { Authorization, role, user } = result || {};
-    setToken(Authorization, true);
-    userStore.setUser(user);
-    userStore.setRoles(role);
+  const handleSetData = (res: LoginResult) => {
+    return new Promise(async (resolve, reject) => {
+      const { code: resCode, result } = res;
+      if(resCode !== 1) return reject(new Error('登录请求失败！'));
+      const { code: resultCode, msg = '',  Authorization, role, user } = result || {};
+      if(resultCode !== 1) {
+        ElMessage.error(msg || '登录失败！');
+        return reject(new Error('登录失败！'));
+      }
+      setToken(Authorization, true);
+      userStore.setUser(user);
+      userStore.setRoles(role);
+      resolve('')
+    });
+  };
+  /** 登录之后获取用户信息， 权限、菜单等 */
+  const getUserInfo = async () => {
     const permissions = await getPermissions();
-    const { buttons, data, entities } = permissions.data as PermissionsResult;
+    const { code: permissionsCode, buttons, data, entities } = permissions as PermissionsResult;
+    if(permissionsCode !== 1) return;
     userStore.setMenuPermissions(entities);
     userStore.setDataPermissions(data);
     userStore.setButtonPermissions(buttons);
-  };
+  }
   /** 登录成功跳转 */
   const goHome = () => {
     router.push(HOME_PATH || '/');

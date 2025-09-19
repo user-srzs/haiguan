@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div>1231231231231
+  <div class="layout">
     <router-view />
   </div>
 <!--  <div :class="classObj" class="app-wrapper">-->
@@ -21,4 +21,8 @@
 <!--  </div>-->
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+  //.layout {
+  //  height: 100%;
+  //}
+</style>

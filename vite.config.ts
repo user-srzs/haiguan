@@ -41,13 +41,13 @@ export default defineConfig(({ command, mode }) => {
     })
   ];
   // 服务代理Ip
-  // let targetIp = 'http://192.168.8.204:'; // 卢成让
+  let targetIp = 'http://192.168.8.201:'; // 卢成让
   // let targetIp = 'http://192.168.8.47:'; // 王浩权
-  let targetIp = 'http://123.157.233.242:'; // 线上
+  // let targetIp = 'http://123.157.233.242:'; // 线上
   // 生产环境配置
   if (isBuild) {
     // 生产环境服务代理Ip
-    targetIp = 'http://192.168.8.204:';
+    targetIp = 'http://192.168.8.201:';
     // gzip压缩
     if (enableCompress) {
       plugins.push(
