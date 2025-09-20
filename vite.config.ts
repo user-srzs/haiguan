@@ -41,9 +41,9 @@ export default defineConfig(({ command, mode }) => {
     })
   ];
   // 服务代理Ip
-  let targetIp = 'http://192.168.8.201:'; // 卢成让
+  // let targetIp = 'http://192.168.8.201:'; // 卢成让
   // let targetIp = 'http://192.168.8.47:'; // 王浩权
-  // let targetIp = 'http://123.157.233.242:'; // 线上
+  let targetIp = 'https://m1.apifoxmock.com/m1/2165906-505936-default'; // 线上
   // 生产环境配置
   if (isBuild) {
     // 生产环境服务代理Ip
@@ -116,7 +116,8 @@ export default defineConfig(({ command, mode }) => {
           ws: false
         },
         [env.VITE_API_URL_CUSTOMS]: {
-          target: `${targetIp}${8028}`,
+          target: `${targetIp}`,
+          // target: `${targetIp}${8028}`,
           changeOrigin: true,
           ws: false
         }

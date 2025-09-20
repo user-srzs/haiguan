@@ -26,8 +26,8 @@ interface Config<D = any> extends InternalAxiosRequestConfig<D> {
 
 // 创建axios实例
 const service: AxiosInstance = axios.create({
-  baseURL: VITE_API_URL_BASE
-  // timeout: TIMEOUT,
+  baseURL: VITE_API_URL_BASE, // 设置请求的base url
+  // timeout: TIMEOUT, // 请求超时时间
   // headers: {
   //   'Content-Type': 'application/json;charset=UTF-8'
   // }

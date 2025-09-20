@@ -4,15 +4,13 @@
   import type { AddRegionResult, GetRegionResult, RegionResult } from '@/api/region/model.ts';
   /** 左侧树节点数据 */
   const treeData = ref<RegionResult[]>([])
-  /** 树配置 */
+  /** 树配置项 */
   const props = reactive({
     label: 'nodeName',
     children: 'children'
   })
   /** 当前选中的节点数据 */
   const activeNode = ref<RegionResult | null>(null)
-  /** 当前选中节点的key,用于初始化默认选中第一项 */
-  const currentNodeKey = ref<number | null>(null)
   /** 处理节点点击事件 */
   const handleNodeClick = (node: RegionResult) => {
     console.log('node', node);
@@ -47,7 +45,7 @@
   const columns = reactive([{
     prop: 'id',
     label: '节点Id',
-    minWidth: 120
+    minWidth: 80
   },{
     prop: 'nodeName',
     label: '节点名称',
@@ -96,7 +94,7 @@
             node-key="id"
             :default-expand-all="true"
             :expand-on-click-node="false"
-            :current-node-key="currentNodeKey"
+            :current-node-key="activeNode?.id"
             highlight-current
             @node-click="handleNodeClick"
           ></el-tree>
@@ -106,7 +104,7 @@
     <el-card shadow="never">
       <template #header>
         <div class="header">
-          <span class="title">{{ '地址列表' }}</span>
+          <span class="title">{{ activeNode?.nodeName || '地址列表' }}</span>
         </div>
       </template>
       <template #default>
@@ -122,7 +120,7 @@
             v-bind="omit(column, ['slot'])"
           >
             <!--  插槽 -->
-            <template v-if="column.slot" v-slot:action="{row}">
+            <template v-if="column.slot" action="{row}">
               <el-link>编辑</el-link>
             </template>
           </el-table-column>
