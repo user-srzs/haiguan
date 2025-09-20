@@ -105,4 +105,82 @@ export function formAssignObject(
   return target;
 }
 
+/**
+ * 时间格式化
+ * @param {*} 当前时间
+ * @param {*} 类型
+ * @returns string 返回格式化时间
+ */
+import dayjs from 'dayjs';
+export function formatTime(
+  date: string | number | Date | dayjs.Dayjs | null | undefined,
+  format: string = 'YYYY-MM-DD HH:mm:ss'
+): string {
+  if (!date) return '';
+  const formattedTime: string = dayjs(date).format(format);
+  return formattedTime === 'Invalid Date' ? '' : formattedTime;
+}
 
+
+/**
+ * @param value - 需要判断类型的值
+ * @param type - 类型，例如：String、Number
+ */
+export function is(value: unknown, type: string): boolean {
+  return Object.prototype.toString.call(value).slice(8, -1) === type;
+}
+
+/**
+ * @param value - 需要判断是否为null的值
+ */
+export function isNull(value: unknown):boolean {
+  return is(value, 'Null');
+}
+
+/**
+ * @param value - 需要判断是否为undefined的值
+ */
+export function isDef(value: unknown):boolean {
+  return is(value, 'Undefined');
+}
+
+/**
+ * @param value - 需要判断是否为undefined的值
+ */
+export function isNullOrDef(value: unknown):boolean {
+  return isNull(value) || isDef(value);
+}
+
+/**
+ * 防抖函数
+ * @param fn - 需要防抖的函数
+ * @param wait - 延迟时间
+ */
+export function debounce(fn: Function, wait: number): Function {
+  let timer: number | undefined;
+  return (...args: any[]) => {
+    clearTimeout(timer);
+    timer = Number(
+      setTimeout(() => {
+        fn(...args);
+        timer = undefined;
+      }, wait)
+    )
+  }
+}
+
+/**
+ * 节流函数
+ * @param fn - 需要防抖的函数
+ * @param wait - 延迟时间
+ */
+export function throttle (fn: Function, wait: number): Function {
+  let timer: number | undefined;
+  return (...args: any[]) => {
+    if(timer) return;
+    timer = Number(setTimeout(() => {
+      fn(...args);
+      timer = undefined;
+    }, wait))
+  }
+}

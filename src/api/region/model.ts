@@ -1,9 +1,9 @@
 /** 添加地址管理参数 */
 export interface AddRegionArgs {
   /** 当前节点id */
-  id?: number;
+  id?: number | null;
   /** 父节点id */
-  parentId?: number;
+  parentId?: number | null;
   /** 节点名称 */
   nodeName?: string;
   /** 绑定模型区域 */
