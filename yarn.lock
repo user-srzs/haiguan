@@ -571,6 +571,16 @@
     "@volar/language-core" "1.11.1"
     path-browserify "^1.0.1"
 
+"@vue-flow/background@^1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@vue-flow/background/-/background-1.3.2.tgz#0c90cd05e5d60da017bbaf5a1c3eb6af7ed9b778"
+  integrity sha512-eJPhDcLj1wEo45bBoqTXw1uhl0yK2RaQGnEINqvvBsAFKh/camHJd5NPmOdS1w+M9lggc9igUewxaEd3iCQX2w==
+
+"@vue-flow/controls@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@vue-flow/controls/-/controls-1.1.3.tgz#40866b553101fbef22d2b9a043965ed76fca4b2c"
+  integrity sha512-XCf+G+jCvaWURdFlZmOjifZGw3XMhN5hHlfMGkWh9xot+9nH9gdTZtn+ldIJKtarg3B21iyHU8JjKDhYcB6JMw==
+
 "@vue-flow/core@^1.46.3":
   version "1.46.4"
   resolved "https://registry.yarnpkg.com/@vue-flow/core/-/core-1.46.4.tgz#f888a4842e4782c31c5e7a232534beeba1f3e6d6"
@@ -581,6 +591,27 @@
     d3-interpolate "^3.0.1"
     d3-selection "^3.0.0"
     d3-zoom "^3.0.0"
+
+"@vue-flow/minimap@^1.5.4":
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/@vue-flow/minimap/-/minimap-1.5.4.tgz#c9c3badea49d4166aa9cdc713017397d9df7574c"
+  integrity sha512-l4C+XTAXnRxsRpUdN7cAVFBennC1sVRzq4bDSpVK+ag7tdMczAnhFYGgbLkUw3v3sY6gokyWwMl8CDonp8eB2g==
+  dependencies:
+    d3-selection "^3.0.0"
+    d3-zoom "^3.0.0"
+
+"@vue-flow/node-resizer@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@vue-flow/node-resizer/-/node-resizer-1.5.0.tgz#f2cd6f7ed763bb32ab25f080f27e1917674f87fa"
+  integrity sha512-FmvOZ6+yVrBEf+8oJcCU20PUZ105QsyM01iiP4vTKHGJ01hzoh9d0/wP9iJkxkIpvBU59CyOHyTKQZlDr4qDhA==
+  dependencies:
+    d3-drag "^3.0.0"
+    d3-selection "^3.0.0"
+
+"@vue-flow/node-toolbar@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@vue-flow/node-toolbar/-/node-toolbar-1.1.1.tgz#fc24f09c82de49d76e6045c2536a1c3f47d1b42c"
+  integrity sha512-vgSnGMLd3FXstdpvC721qcBDzGkPsudmyA8urEP55/EMikCp59klgzPvVULTDxxsew5MdXtTBCumsqOi+PXJdg==
 
 "@vue/compiler-core@3.5.21":
   version "3.5.21"
