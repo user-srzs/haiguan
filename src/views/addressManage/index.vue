@@ -72,7 +72,7 @@
     activeNode.value = node;
   }
   /** ------------------------- 列表 添加/编辑 表单 处理逻辑 start ------------------------------- */
-    // 添加/编辑表单弹窗显示
+  // 添加/编辑表单弹窗显示
   const dialogVisible = ref<boolean>(false)
   // 表单类型
   const dialogType = ref<'add' | 'edit'>('add')
@@ -263,7 +263,7 @@
       <el-row>
         <el-col>
           <el-form-item label="节点名称" prop="nodeName">
-            <el-input placeholder="请输入节点名称" v-model="form.nodeName"></el-input>
+            <el-input placeholder="请输入" v-model="form.nodeName"></el-input>
           </el-form-item>
         </el-col>
       </el-row>
