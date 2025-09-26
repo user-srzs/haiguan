@@ -68,6 +68,12 @@ export interface Tree<T> {
   id: number | string;
   label: string;
   value: number | string;
+  type: TreeType;
   original: T;
   children?: Tree<T>[] | null;
+}
+
+export enum TreeType {
+  terminal = 'terminal',
+  goodsType = 'goodsType'
 }

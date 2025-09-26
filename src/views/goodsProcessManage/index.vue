@@ -56,18 +56,19 @@ const terminalTree = <T extends Record<string, any>>(list: T[]): Tree<T>[] => {
 const processTerminalList = ref<ProcessTerminal[]>([]);
 
 // 激活的节点
-const activeProcessTerminal = ref<ProcessTerminal | null>(null);
+const activeProcessTerminal = ref<Tree<ProcessTerminal> | null>(null);
 
 // 点击节点
-const handleNodeClick = async (node: ProcessTerminal) => {
+const handleNodeClick = async (node: Tree<ProcessTerminal>) => {
   console.log('node', node);
+  activeProcessTerminal.value = null;
   if (node.type === 'terminal' && !node.children?.length) return;
   if (node.type === 'terminal') {
     activeProcessTerminal.value = node.children[0];
   }else {
     activeProcessTerminal.value = node;
   }
-  await getFlow({ arrivalOrDeparture: activeTab.value, processGoodsTypeId: activeProcessTerminal.value?.id });
+  await getFlow(params.value);
 }
 
 // 左侧header, 添加节点
@@ -281,8 +282,20 @@ const activeTab = ref<string>(tabList[0].name);
 // 切换tab
 const changeTab = async (item: TabItem) => {
   activeTab.value = item.name;
-  await getFlow({ arrivalOrDeparture: activeTab.value, processGoodsTypeId: activeProcessTerminal.value?.id });
+  await getFlow(params.value);
 };
+
+
+const computedParamsNodes = computed(() => {
+  return {
+    arrivalOrDeparture: activeTab.value,
+    processGoodsTypeId: activeProcessTerminal.value?.id
+  }
+})
+
+const params = ref({
+  ...computedParamsNodes,
+})
 
 // 节点
 const nodes = ref<Node[]>([
@@ -350,7 +363,7 @@ const createFlowNode = async () => {
   formAssignObject(formData, activeFlow.value);
   const res = await createProcessFlowNode(formData);
   console.log('res', res);
-  await getFlow({ arrivalOrDeparture: activeTab.value, processGoodsTypeId: activeProcessTerminal.value?.id })
+  await getFlow(params.value)
 }
 
 
@@ -362,7 +375,7 @@ const createFlowNode = async () => {
 onMounted(async () => {
   await getTerminal();
   activeProcessTerminal.value = !!processTerminalList.value?.length ? processTerminalList.value[0] : null;
-  await getFlow({ arrivalOrDeparture: activeTab.value, processGoodsTypeId: activeProcessTerminal.value?.id })
+  await getFlow(params.value)
 })
 </script>
 
