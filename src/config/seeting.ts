@@ -20,7 +20,7 @@ export const VITE_API_URL_CUSTOMS: string = envConfig.customsServiceUrl;
 export const WHITE_LIST: string[] = ['/login'];
 
 /** 首页路径, 为空则取第一个菜单的地址 */
-export const HOME_PATH: string = '/home';
+export const HOME_PATH: string = '/goodsProcess';
 
 /** 外层布局的路由地址 */
 export const LAYOUT_PATH = '/';
