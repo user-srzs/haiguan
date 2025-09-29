@@ -1,28 +1,13 @@
 <script setup lang="ts">
-  // import { Sidebar, Navbar } from "@/layout/components/index.ts";
+  import CustomLayout from "@/components/CustomLayout/index.vue"
 </script>
 
 <template>
-  <div class="layout">
+  <custom-layout>
     <router-view />
-  </div>
-<!--  <div :class="classObj" class="app-wrapper">-->
-<!--&lt;!&ndash;    <sidebar class="sidebar-container" />&ndash;&gt;-->
-<!--    <div :class="{ hasTagsView: needTagsView }" class="main-container">-->
-<!--      <div :class="{ 'fixed-header': fixedHeader }">-->
-<!--&lt;!&ndash;        <navbar />&ndash;&gt;-->
-<!--      </div>-->
-<!--      <div class="child-container">-->
-<!--        <transition name="fade-transform" mode="out-in">-->
-<!--          <router-view :key="key" />-->
-<!--        </transition>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
+  </custom-layout>
 </template>
 
 <style scoped lang="scss">
-  //.layout {
-  //  height: 100%;
-  //}
+
 </style>
