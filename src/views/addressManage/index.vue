@@ -277,7 +277,8 @@
 
 <style scoped lang="scss">
   .container {
-    height: calc(100vh - 24px);
+    height: 100%;
+    //height: calc(100vh - 24px);
     display: grid;
     grid-template-columns: minmax(300px, 20%) minmax(0, auto);
     gap: 12px;

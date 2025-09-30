@@ -271,8 +271,10 @@
     opacity: 0;
   }
   .login-wrapper {
-    width: 100vw;
-    height: 100vh;
+    width: 100vw; // 向下兼容
+    width: 100dvw;
+    height: 100vh; // 向下兼容
+    height: 100dvh;
     background: url('@/assets/login/login_bg.svg') no-repeat center center;
     background-size: cover;
     position: relative;
