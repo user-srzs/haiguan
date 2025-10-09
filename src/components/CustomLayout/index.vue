@@ -1,44 +1,3 @@
-<!-- 基于 ele-pro-layout 重构的布局组件 -->
-<template>
-  <div class="custom-layout" :class="layoutClass">
-    <!-- 顶栏 - 固定定位 -->
-    <div v-if="showHeader" class="layout-header">
-      <div class="header-left">
-        <div class="logo" @click="onLogoClick">
-          <img v-if="logo" :src="logo" alt="logo" />
-          <span v-if="title">{{ title }}</span>
-        </div>
-        <div v-if="showCollapse" class="collapse-btn" @click="toggleCollapse">
-          <el-icon><Fold v-if="!collapse" /><Expand v-else /></el-icon>
-        </div>
-      </div>
-      <div class="header-right">
-        <slot name="header-right"></slot>
-      </div>
-    </div>
-
-    <!-- 侧栏 - 固定定位 -->
-    <div v-if="showSidebar" class="layout-sidebar" :class="{ 'sidebar-collapse': collapse }">
-      <slot name="sidebar"></slot>
-    </div>
-
-    <!-- 页签栏 - 固定定位 -->
-    <div v-if="showTabs" class="layout-tabs">
-      <slot name="tabs"></slot>
-    </div>
-
-    <!-- 主内容区域 - 可滚动 -->
-    <div class="layout-content">
-      <div class="layout-page">
-        <slot></slot>
-      </div>
-    </div>
-
-    <!-- 小屏幕遮罩层 -->
-    <div v-if="isMobile && !collapse" class="layout-shade" @click="toggleCollapse"></div>
-  </div>
-</template>
-
 <script setup lang="ts">
 
 // 类型定义
@@ -221,6 +180,54 @@ defineExpose({
 })
 </script>
 
+<template>
+  <div class="custom-layout" :class="layoutClass">
+    <!-- 顶栏 - 固定定位 -->
+    <div v-if="showHeader" class="layout-header">
+      <div class="header-left">
+        <div class="logo" @click="onLogoClick">
+          <img v-if="logo" :src="logo" alt="logo" />
+          <span v-if="title">{{ title }}</span>
+        </div>
+        <div v-if="showCollapse" class="collapse-btn" @click="toggleCollapse">
+          <el-icon><Fold v-if="!collapse" /><Expand v-else /></el-icon>
+        </div>
+        <slot name="header-left"></slot>
+      </div>
+      <div class="header-content">
+        <slot name="header-content"></slot>
+      </div>
+      <div class="header-right">
+        <div class="header-right-tools">
+        </div>
+        <slot name="header-right"></slot>
+      </div>
+    </div>
+
+    <!-- 侧栏 - 固定定位 -->
+    <div v-if="showSidebar" class="layout-sidebar" :class="{ 'sidebar-collapse': collapse }">
+      <slot name="sidebar"></slot>
+    </div>
+
+    <!-- 页签栏 - 固定定位 -->
+    <div v-if="showTabs" class="layout-tabs">
+      <slot name="tabs"></slot>
+    </div>
+
+    <!-- 主内容区域 - 可滚动 -->
+    <div class="layout-content">
+      <div class="layout-page">
+        <slot></slot>
+        <div class="layout-footer">
+          <slot name="layout-footer"></slot>
+        </div>
+      </div>
+    </div>
+    <!-- 小屏幕遮罩层 -->
+    <div v-if="isMobile && !collapse" class="layout-shade" @click="toggleCollapse"></div>
+  </div>
+</template>
+
 <style lang="scss" scoped>
 // 基础变量 - 参考 ele-pro-layout
 $header-height: 56px;
@@ -250,7 +257,7 @@ $z-index-shade: 997;
     border-bottom: 1px solid #e8e8e8;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    //justify-content: space-between;
     padding: 0 16px;
     z-index: $z-index-header;
     box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
@@ -286,11 +293,20 @@ $z-index-shade: 997;
         cursor: pointer;
         border-radius: 4px;
         transition: all 0.3s;
+        font-size: 24px;
 
         &:hover {
           background: #f5f5f5;
         }
       }
+    }
+
+    .header-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-left: 16px;
     }
 
     .header-right {
