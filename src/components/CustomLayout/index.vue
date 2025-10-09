@@ -1,6 +1,8 @@
 <script setup lang="ts">
 
 // 类型定义
+import { Expand, Fold } from '@element-plus/icons-vue';
+
 type LayoutMode = 'side' | 'top' | 'mix'
 
 interface LayoutProps {
@@ -107,9 +109,9 @@ const showSidebar: ComputedRef<boolean> = computed(() => {
   return props.showSidebar && !isMobile.value
 })
 
-
 // 方法定义
 const toggleCollapse = (): void => {
+  console.log('toggleCollapse------------------------------------------------1');
   emit('update:collapse', !props.collapse)
 }
 
@@ -190,7 +192,10 @@ defineExpose({
           <span v-if="title">{{ title }}</span>
         </div>
         <div v-if="showCollapse" class="collapse-btn" @click="toggleCollapse">
-          <el-icon><Fold v-if="!collapse" /><Expand v-else /></el-icon>
+          <el-icon>
+            <Fold v-if="!collapse" />
+            <Expand v-else />
+          </el-icon>
         </div>
         <slot name="header-left"></slot>
       </div>
@@ -206,7 +211,9 @@ defineExpose({
 
     <!-- 侧栏 - 固定定位 -->
     <div v-if="showSidebar" class="layout-sidebar" :class="{ 'sidebar-collapse': collapse }">
+      <slot name="sidebar-header"></slot>
       <slot name="sidebar"></slot>
+      <slot name="sidebar-bottom"></slot>
     </div>
 
     <!-- 页签栏 - 固定定位 -->

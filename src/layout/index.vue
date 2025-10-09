@@ -1,20 +1,81 @@
 <script setup lang="ts">
-  import CustomLayout from "@/components/CustomLayout/index.vue"
+import { FullScreen } from '@element-plus/icons-vue';
+import SidebarMenu from '@/components/CustomLayout/components/SidebarMenu.vue';
+import Breadcrumb from '@/components/CustomLayout/components/Breadcrumb.vue';
+import { useUserStore } from '@/stores/modules/user.ts';
+const userStore = useUserStore();
+const logo = ref('https://element-plus.org/images/element-plus-logo.svg')
+const title = ref('海关配置后台')
+const layout = ref<'side' | 'top' | 'mix'>('side')
+const collapse = ref(false)
+const showHeader = ref(true)
+const showSidebar = ref(true)
+const showTabs = ref(false)
+/** ------------- 折叠侧边菜单栏 ----------------- */
+const showCollapse = ref(true);
+const handleCollapseChange = (value: boolean): void => {
+  collapse.value = value
+};
+// menus - { homePath: '', menus: [] }
+const menus = userStore.getMenus();
+
+/** ------------- 全屏切换 ----------------- */
+const isFullscreen = ref(false);
+const toggleFullscreen = async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+      isFullscreen.value = true
+    } else {
+      await document.exitFullscreen()
+      isFullscreen.value = false
+    }
+  } catch (error) {
+    ElMessage.error('全屏切换失败')
+  }
+};
+
+/** ------------- 页面挂载后执行 ----------------- */
+onMounted(() => {
+  console.log('userStore', userStore);
+  console.log('menus', menus);
+});
 </script>
 
 <template>
-  <custom-layout>
+  <CustomLayout
+    :logo="logo"
+    :title="title"
+    :layout="layout"
+    :collapse="collapse"
+    :show-header="showHeader"
+    :show-sidebar="showSidebar"
+    :show-tabs="showTabs"
+    :show-collapse="showCollapse"
+    @update:collapse="handleCollapseChange"
+  >
     <router-view />
     <template #header-left>
-      <el-button>按钮1</el-button>
-    </template>
-    <template #header-content>
-      <el-button>按钮3444</el-button>
+      <Breadcrumb :menus="menus"/>
     </template>
     <template #header-right>
-      <el-button>按钮2</el-button>
+      <!-- 全屏切换 -->
+      <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
+        <el-button
+          :icon="FullScreen"
+          circle
+          size="small"
+          @click="toggleFullscreen"
+          class="fullscreen-toggle"
+        />
+      </el-tooltip>
+      <!-- 用户信息 -->
+      <UserDropdown :collapse="collapse" />
     </template>
-  </custom-layout>
+    <template #sidebar>
+      <SidebarMenu :menus="menus"/>
+    </template>
+  </CustomLayout>
 </template>
 
 <style scoped lang="scss">

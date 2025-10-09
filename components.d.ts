@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Breadcrumb: typeof import('./src/components/CustomLayout/components/Breadcrumb.vue')['default']
     Collapse: typeof import('./src/components/CustomLayout/components/Collapse.vue')['default']
     ContextMenu: typeof import('./src/components/custom-flow/components/ContextMenu.vue')['default']
     CustomFlow: typeof import('./src/components/custom-flow/index.vue')['default']
@@ -43,6 +44,8 @@ declare module 'vue' {
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTabPane: typeof import('element-plus/es')['ElTabPane']
+    ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTree: typeof import('element-plus/es')['ElTree']
     ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
@@ -52,7 +55,8 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/custom-flow/components/Sidebar.vue')['default']
+    SidebarMenu: typeof import('./src/components/CustomLayout/components/SidebarMenu.vue')['default']
     StartNode: typeof import('./src/components/custom-flow/nodes/StartNode.vue')['default']
-    TestScroll: typeof import('./src/components/CustomLayout/test-scroll.vue')['default']
+    UserDropdown: typeof import('./src/components/CustomLayout/components/UserDropdown.vue')['default']
   }
 }
