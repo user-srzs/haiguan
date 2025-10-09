@@ -2,7 +2,7 @@
  * 路由工具函数
  */
 import type { MenuItem } from '@/router/model.ts';
-import { HOME_PATH } from '@/config/seeting.ts';
+// HOME_PATH 已移除，使用传入的 homePath 参数
 
 // 面包屑项接口
 export interface BreadcrumbItem {
@@ -11,27 +11,6 @@ export interface BreadcrumbItem {
   icon?: string;
 }
 
-/**
- * 判断菜单项是否应该被过滤（仅包含重定向的子菜单）
- * @param menuItem 菜单项
- * @returns 是否应该过滤
- */
-function shouldFilterMenuItem(menuItem: MenuItem): boolean {
-  // 如果没有子菜单，不过滤
-  if (!menuItem.children || menuItem.children.length === 0) {
-    return false;
-  }
-  
-  // 如果只有一个子菜单且是重定向菜单，则过滤掉
-  if (menuItem.children.length === 1) {
-    const child = menuItem.children[0];
-    if (child.path === menuItem.redirect) {
-      return true;
-    }
-  }
-  
-  return false;
-}
 
 /**
  * 过滤菜单项，移除仅包含重定向的子菜单
@@ -46,8 +25,8 @@ export function filterMenuItems(menuItems: MenuItem[]): MenuItem[] {
         return false;
       }
       
-      // 过滤掉仅包含重定向的子菜单
-      return !shouldFilterMenuItem(item);
+      // 不过滤有重定向的菜单项，因为这是正常的菜单结构
+      return true;
     })
     .map(item => ({
       ...item,
@@ -59,23 +38,25 @@ export function filterMenuItems(menuItems: MenuItem[]): MenuItem[] {
  * 生成面包屑
  * @param currentPath 当前路径
  * @param menuItems 菜单项数组
+ * @param homePath 首页路径，默认为 '/'
  * @returns 面包屑数组
  */
 export function generateBreadcrumbs(
   currentPath: string, 
-  menuItems: MenuItem[]
+  menuItems: MenuItem[],
+  homePath: string = '/'
 ): BreadcrumbItem[] {
   const breadcrumbs: BreadcrumbItem[] = [];
   
   // 添加首页
   breadcrumbs.push({
-    path: HOME_PATH,
+    path: homePath,
     title: '首页',
     icon: 'House'
   });
   
   // 如果当前路径就是首页，直接返回
-  if (currentPath === HOME_PATH) {
+  if (currentPath === homePath) {
     return breadcrumbs;
   }
   
@@ -93,20 +74,32 @@ export function generateBreadcrumbs(
     return null;
   }
   
-  // 递归构建面包屑路径
+  // 递归构建面包屑路径，处理重定向
   function buildBreadcrumbPath(path: string, items: MenuItem[]): string[] {
     const pathSegments: string[] = [];
     
     for (const item of items) {
+      // 直接匹配路径
       if (item.path === path) {
         pathSegments.push(item.path);
         return pathSegments;
       }
       
+      // 检查重定向
+      if (item.redirect === path) {
+        // 如果当前路径是重定向目标，只添加重定向目标路径，不添加父路径
+        pathSegments.push(path);
+        return pathSegments;
+      }
+      
+      // 递归查找子菜单
       if (item.children) {
         const childPath = buildBreadcrumbPath(path, item.children);
         if (childPath.length > 0) {
-          pathSegments.push(item.path);
+          // 只有当父菜单不是重定向菜单时才添加父路径
+          if (!item.redirect || item.redirect !== path) {
+            pathSegments.push(item.path);
+          }
           pathSegments.push(...childPath);
           return pathSegments;
         }
@@ -118,15 +111,19 @@ export function generateBreadcrumbs(
   
   const pathSegments = buildBreadcrumbPath(currentPath, menuItems);
   
-  // 为每个路径段生成面包屑项
+  // 为每个路径段生成面包屑项，去重
+  const addedPaths = new Set<string>();
   for (const segment of pathSegments) {
-    const menuItem = findMenuItem(segment, menuItems);
-    if (menuItem && menuItem.meta?.title) {
-      breadcrumbs.push({
-        path: menuItem.path,
-        title: menuItem.meta.title,
-        icon: menuItem.meta.icon
-      });
+    if (!addedPaths.has(segment)) {
+      const menuItem = findMenuItem(segment, menuItems);
+      if (menuItem && menuItem.meta?.title) {
+        breadcrumbs.push({
+          path: menuItem.path,
+          title: menuItem.meta.title,
+          icon: menuItem.meta.icon
+        });
+        addedPaths.add(segment);
+      }
     }
   }
   
@@ -180,9 +177,7 @@ export function isPathMatch(currentPath: string, menuPath: string): boolean {
   }
   
   // 检查是否是子路径
-  if (currentPath.startsWith(menuPath + '/')) {
-    return true;
-  }
+  return currentPath.startsWith(menuPath + '/');
   
-  return false;
+
 }

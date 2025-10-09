@@ -9,7 +9,7 @@
       <el-icon v-if="item.icon && index === 0">
         <component :is="getIconComponent(item.icon)" />
       </el-icon>
-      <span>{{ item.title }}</span>
+      <span v-if="index > 0">{{ item.title }}</span>
     </el-breadcrumb-item>
   </el-breadcrumb>
 </template>
@@ -20,8 +20,13 @@ import { generateBreadcrumbs } from '@/utils/routeUtils';
 import type { MenuItem } from '@/router/model.ts';
 
 // 定义props
-interface Props {
+interface MenuData {
+  homePath: string;
   menus: MenuItem[];
+}
+
+interface Props {
+  menus: MenuData;
 }
 
 const props = defineProps<Props>();
@@ -30,7 +35,7 @@ const route = useRoute();
 
 // 面包屑数据
 const breadcrumbItems = computed(() => {
-  return generateBreadcrumbs(route.path, props.menus);
+  return generateBreadcrumbs(route.path, props.menus.menus, props.menus.homePath);
 });
 
 // 获取图标组件

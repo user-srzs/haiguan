@@ -66,8 +66,13 @@ import { filterMenuItems, getActiveMenuPath, isPathMatch } from '@/utils/routeUt
 import type { MenuItem } from '@/router/model.ts';
 
 // 定义props
-interface Props {
+interface MenuData {
+  homePath: string;
   menus: MenuItem[];
+}
+
+interface Props {
+  menus: MenuData;
   collapse?: boolean;
 }
 
@@ -80,7 +85,7 @@ const router = useRouter();
 
 // 过滤后的菜单
 const filteredMenus = computed(() => {
-  return filterMenuItems(props.menus);
+  return filterMenuItems(props.menus.menus);
 });
 
 // 当前激活的菜单
@@ -89,7 +94,7 @@ const activeMenu = ref('');
 // 更新激活菜单
 const updateActiveMenu = () => {
   const currentPath = route.path;
-  const activePaths = getActiveMenuPath(currentPath, filteredMenus.value);
+  const activePaths = getActiveMenuPath(currentPath, props.menus.menus);
   
   if (activePaths.length > 0) {
     // 找到最匹配的菜单项
