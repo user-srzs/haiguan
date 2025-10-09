@@ -5,19 +5,57 @@
       </div>
       <div class="node-label">{{ data?.label || '普通节点' }}</div>
     </div>
-    <!-- 输入连接点 -->
+    <!-- 顶部顶点连接点 -->
     <Handle
       type="target"
       position="top"
       :id="`${id}-top`"
-      style="background: #3b82f6; border: 2px solid white; width: 8px; height: 8px;"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        top: '0',
+        left: '50%',
+      }"
     />
-    <!-- 输出连接点 -->
+    <!-- 右侧顶点连接点  -->
+    <Handle
+      type="source"
+      position="right"
+      :id="`${id}-right`"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        right: '0',
+        top: '50%',
+      }"
+    />
+    <!-- 底部顶点连接点 -->
     <Handle
       type="source"
       position="bottom"
       :id="`${id}-bottom`"
-      style="background: #3b82f6; border: 2px solid white; width: 8px; height: 8px;"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        bottom: '0',
+        left: '50%',
+      }"
+    />
+    <!-- 左侧顶点连接点 -->
+    <Handle
+      type="source"
+      position="left"
+      :id="`${id}-left`"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        left: '0',
+        top: '50%',
+      }"
     />
   </div>
 </template>
@@ -42,7 +80,7 @@ const isSelected = computed(() => props.selected)
 .normal-node {
   min-width: 120px;
   min-height: 60px;
-  border: 3px solid #3b82f6;
+  border: 3px solid var(--el-color-primary);
   border-radius: 8px;
   background: white;
   display: flex;
@@ -59,7 +97,7 @@ const isSelected = computed(() => props.selected)
   }
 
   &.selected {
-    box-shadow: 0 0 0 2px #3b82f6;
+    box-shadow: 0 0 0 2px var(--el-color-primary);
     border-style: dashed;
   }
 

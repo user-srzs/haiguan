@@ -94,10 +94,6 @@ const edges = ref([
     targetHandle: '2-top',
     type: 'default',
     animated: false,
-    style: {
-      stroke: '#3b82f6',
-      strokeWidth: 2
-    }
   },
   {
     id: 'edge-2',
@@ -107,10 +103,6 @@ const edges = ref([
     targetHandle: '3-top',
     type: 'default',
     animated: false,
-    style: {
-      stroke: '#3b82f6',
-      strokeWidth: 2
-    }
   },
   {
     id: 'edge-3',
@@ -120,10 +112,6 @@ const edges = ref([
     targetHandle: '4-left',
     type: 'default',
     animated: false,
-    style: {
-      stroke: '#3b82f6',
-      strokeWidth: 2
-    }
   }
 ])
 
@@ -435,11 +423,7 @@ const handleConnect = (event: any) => {
     sourceHandle: event.sourceHandle,
     targetHandle: event.targetHandle,
     type: 'default',
-    animated: false,
-    style: {
-      stroke: '#3b82f6',
-      strokeWidth: 2
-    }
+    animated: false
   }
   
   // 添加到边数组
@@ -655,30 +639,30 @@ defineExpose({
 }
 
 :deep(.vue-flow__node.selected) {
-  outline: 2px dashed #3b82f6;
+  outline: 2px dashed var(--el-color-primary-light-3);
   outline-offset: 3px;
 }
 
 :deep(.vue-flow__node.selected:has(.decision-node)) {
-  outline: 2px dashed #3b82f6;
-  outline-offset: 25px;
+  outline: 2px dashed var(--el-color-primary-light-3);
+  outline-offset: 20px;
 }
 
 
 :deep(.vue-flow__handle) {
-  background: #3b82f6;
+  background: var(--el-color-primary);
   border: 2px solid white;
   width: 8px;
   height: 8px;
 }
 
 :deep(.vue-flow__edge-path) {
-  stroke: #3b82f6;
-  stroke-width: 2;
+  stroke: var(--el-color-primary) !important;
+  stroke-width: 2 !important;
 }
 
 :deep(.vue-flow__edge.selected .vue-flow__edge-path) {
-  stroke: #1d4ed8;
+  stroke: var(--el-color-primary);
   stroke-width: 3;
 }
 

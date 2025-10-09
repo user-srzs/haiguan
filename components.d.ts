@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Collapse: typeof import('./src/components/CustomLayout/components/Collapse.vue')['default']
     ContextMenu: typeof import('./src/components/custom-flow/components/ContextMenu.vue')['default']
     CustomFlow: typeof import('./src/components/custom-flow/index.vue')['default']
     CustomLayout: typeof import('./src/components/CustomLayout/index.vue')['default']

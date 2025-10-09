@@ -11,13 +11,11 @@
       position="top"
       :id="`${id}-top`"
       :style="{
-        background: '#3b82f6',
         border: '2px solid white',
         width: '8px',
         height: '8px',
-        top: '0px',
-        left: '50%',
-        transform: 'translateX(-50%)'
+        top: '0',
+        left: '0',
       }"
     />
     <!-- 右侧顶点连接点 -->
@@ -26,13 +24,11 @@
       position="right"
       :id="`${id}-right`"
       :style="{
-        background: '#3b82f6',
         border: '2px solid white',
         width: '8px',
         height: '8px',
-        right: '0px',
-        top: '50%',
-        transform: 'translateY(-50%)'
+        right: '0',
+        top: '0',
       }"
     />
     <!-- 底部顶点连接点 -->
@@ -41,13 +37,11 @@
       position="bottom"
       :id="`${id}-bottom`"
       :style="{
-        background: '#3b82f6',
         border: '2px solid white',
         width: '8px',
         height: '8px',
-        bottom: '0px',
-        left: '50%',
-        transform: 'translateX(-50%)'
+        bottom: '0',
+        left: '100%',
       }"
     />
     <!-- 左侧顶点连接点 -->
@@ -56,13 +50,11 @@
       position="left"
       :id="`${id}-left`"
       :style="{
-        background: '#3b82f6',
         border: '2px solid white',
         width: '8px',
         height: '8px',
-        left: '0px',
-        top: '50%',
-        transform: 'translateY(-50%)'
+        left: '0',
+        top: '100%',
       }"
     />
   </div>
@@ -86,9 +78,9 @@ const isSelected = computed(() => props.selected)
 
 <style scoped lang="scss">
 .decision-node {
-  width: 100px;
-  height: 100px;
-  border: 3px solid #3b82f6;
+  width: 80px;
+  height: 80px;
+  border: 3px solid var(--el-color-primary);
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -104,9 +96,9 @@ const isSelected = computed(() => props.selected)
   }
 
   &.selected {
-    box-shadow: 0 0 0 2px #3b82f6;
-    border: 3px dashed #3b82f6;
-    outline: 2px dashed #3b82f6;
+    box-shadow: 0 0 0 2px var(--el-color-primary);
+    border: 3px dashed var(--el-color-primary);
+    outline: 2px dashed var(--el-color-primary);
     outline-offset: 25px;
     // 菱形旋转45度后，需要的最小正方形边长是100√2 ≈ 141.4px
     // 我们设置为145px以确保完全包围菱形

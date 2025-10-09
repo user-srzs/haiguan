@@ -7,7 +7,7 @@
         @dragstart="(event) => onDragStart('start', event)"
         @click="onNodeClick('start')"
       >
-        <div class="node-icon start-icon">●</div>
+        <div class="node-icon start-icon"></div>
         <span class="node-label">开始</span>
       </div>
       
@@ -40,7 +40,6 @@
       >
         <div class="node-icon end-icon">
           <div class="outer-circle"></div>
-          <div class="inner-circle"></div>
         </div>
         <span class="node-label">结束</span>
       </div>
@@ -109,7 +108,7 @@ const onDragStart = (type: string, event: DragEvent) => {
     user-select: none;
 
     &:hover {
-      border-color: #3b82f6;
+      border-color: var(--el-color-primary);
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
       transform: translateY(-1px);
       background: rgba(59, 130, 246, 0.15);
@@ -129,11 +128,11 @@ const onDragStart = (type: string, event: DragEvent) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid #3b82f6;
+      border: 2px solid var(--el-color-primary);
       border-radius: 4px;
       background: white;
       font-size: 12px;
-      color: #3b82f6;
+      color: var(--el-color-primary);
       font-weight: bold;
     }
 
@@ -164,7 +163,7 @@ const onDragStart = (type: string, event: DragEvent) => {
     .outer-circle {
       width: 16px;
       height: 16px;
-      border: 2px solid #3b82f6;
+      border: 2px solid var(--el-color-primary);
       border-radius: 50%;
       position: absolute;
       top: 50%;
@@ -175,7 +174,7 @@ const onDragStart = (type: string, event: DragEvent) => {
     .inner-circle {
       width: 8px;
       height: 8px;
-      background: #3b82f6;
+      background: var(--el-color-primary);
       border-radius: 50%;
       position: absolute;
       top: 50%;

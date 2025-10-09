@@ -6,15 +6,12 @@
     @click.stop
   >
     <div class="menu-item" @click="handleEdit">
-      <div class="menu-icon">✏️</div>
       <span>编辑文本</span>
     </div>
     <div class="menu-item" @click="handleCopy">
-      <div class="menu-icon">📋</div>
       <span>复制</span>
     </div>
     <div class="menu-item danger" @click="handleDelete">
-      <div class="menu-icon">🗑️</div>
       <span>删除</span>
     </div>
   </div>

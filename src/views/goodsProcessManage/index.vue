@@ -287,7 +287,6 @@ const changeTab = async (item: TabItem) => {
   await getFlow(params.value);
 };
 
-
 const computedParamsNodes = computed(() => {
   return {
     arrivalOrDeparture: activeTab.value,
@@ -300,17 +299,10 @@ const params = ref({
 })
 
 // 节点
-const nodes = ref<Node[]>([
-  // { id: 1, type: 'input', label: 'Node1', position: { x: 250, y: 5} },
-  // { id: 2, type: 'input2', label: 'Node2', position: { x: 100, y: 100} },
-  // { id: 3, type: 'input3', label: 'Node3', position: { x: 400, y: 100} },
-])
+const nodes = ref<Node[]>([])
 
 // 连接线
-const edges = ref<Edge[]>([
-  // {id: 1, source: 1, target: 2 },
-  // {id: 2, source: 2, target: 2 }
-]);
+const edges = ref<Edge[]>([]);
 
 // 获取流程
 const getFlow = async (where = {}) => {
@@ -353,7 +345,6 @@ const activeFlow = ref({
   visualizationRegionName: ""
 });
 
-
 // 创建流程节点
 const createFlowNode = async () => {
   const formData = {
@@ -372,11 +363,6 @@ const createFlowNode = async () => {
   console.log('res', res);
   await getFlow(params.value)
 }
-
-
-
-
-
 
 /** 初始化挂载完之后执行 */
 onMounted(async () => {
@@ -446,14 +432,6 @@ onMounted(async () => {
       <template #default>
       <!-- 流程图 -->
         <CustomFlow :model-value="{ nodes, edges }"></CustomFlow>
-<!--          <VueFlow v-model:nodes="nodes" v-model:edges="edges">-->
-<!--            <Background></Background>-->
-<!--            <panel>-->
-<!--              <el-button type="primary" @click="createFlowNode">添加节点</el-button>-->
-<!--            </panel>-->
-<!--&lt;!&ndash;            <template #node-custom="{ node }"></template>&ndash;&gt;-->
-<!--&lt;!&ndash;            <template #edge-custom="{ node }"></template>&ndash;&gt;-->
-<!--          </VueFlow>-->
       </template>
     </el-card>
   </div>

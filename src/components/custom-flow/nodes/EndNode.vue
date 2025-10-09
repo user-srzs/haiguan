@@ -1,14 +1,61 @@
 <template>
   <div class="end-node" :class="{ selected: isSelected }">
     <div class="node-content">
-      <div class="node-label">{{ data?.label || '结束' }}</div>
+      <div class="outer-circle">
+        <div class="node-label">{{ data?.label || '结束' }}</div>
+      </div>
     </div>
-    <!-- 输入连接点 -->
+    <!-- 顶部顶点连接点 -->
     <Handle
       type="target"
       position="top"
       :id="`${id}-top`"
-      style="background: #3b82f6; border: 2px solid white; width: 8px; height: 8px;"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        top: '0',
+        left: '50%',
+      }"
+    />
+    <!-- 右侧顶点连接点  -->
+    <Handle
+      type="source"
+      position="right"
+      :id="`${id}-right`"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        right: '0',
+        top: '50%',
+      }"
+    />
+    <!-- 底部顶点连接点 -->
+    <Handle
+      type="source"
+      position="bottom"
+      :id="`${id}-bottom`"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        bottom: '0',
+        left: '50%',
+      }"
+    />
+    <!-- 左侧顶点连接点 -->
+    <Handle
+      type="source"
+      position="left"
+      :id="`${id}-left`"
+      :style="{
+        border: '2px solid white',
+        width: '8px',
+        height: '8px',
+        left: '0',
+        top: '50%',
+      }"
     />
   </div>
 </template>
@@ -33,7 +80,7 @@ const isSelected = computed(() => props.selected)
 .end-node {
   width: 80px;
   height: 80px;
-  border: 3px solid #3b82f6;
+  border: 3px solid var(--el-color-primary);
   border-radius: 50%;
   background: white;
   display: flex;
@@ -49,7 +96,7 @@ const isSelected = computed(() => props.selected)
   }
 
   &.selected {
-    box-shadow: 0 0 0 2px #3b82f6;
+    box-shadow: 0 0 0 2px var(--el-color-primary);
     border-style: dashed;
   }
 
@@ -67,23 +114,18 @@ const isSelected = computed(() => props.selected)
   }
 
   .outer-circle {
-    width: 24px;
-    height: 24px;
-    border: 3px solid #3b82f6;
+    width: 70px;
+    height: 70px;
+    border: 3px solid var(--el-color-primary);
     border-radius: 50%;
     position: absolute;
-    top: 0;
-    left: 0;
-  }
-
-  .inner-circle {
-    width: 12px;
-    height: 12px;
-    background: #3b82f6;
-    border-radius: 50%;
-    position: absolute;
-    top: 6px;
-    left: 6px;
+    top: calc(50% - 35px);
+    left: calc(50% - 35px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
   }
 
   .node-label {
