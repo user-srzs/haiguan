@@ -1,8 +1,6 @@
 <script setup lang="ts" name="addressManage">
 import { Plus } from "@element-plus/icons-vue";
-import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
 import type { Node, Edge } from "@vue-flow/core";
-import { Background } from "@vue-flow/background";
 import type { FormInstance, FormRules } from 'element-plus';
 import type {
   AddProcessGoodsType,
@@ -20,8 +18,8 @@ import {
 } from '@/api/processTerminal';
 import { formAssignObject, isNullOrDef } from '@/utils';
 import { createProcessFlowNode, getProcessFlow } from '@/api/processFlow';
-import { CreateProcessFlowNodeArgs, FlowNodeResult } from '@/api/processFlow/model.ts';
-const { addEdges } = useVueFlow();
+import { FlowNodeResult } from '@/api/processFlow/model.ts';
+import CustomFlow from '@/components/custom-flow/index.vue';
 // 获取节点列表(航站楼、货物类型)
 const getTerminal = async () => {
   const res = await getProcessTerminal();
@@ -64,7 +62,7 @@ const handleNodeClick = async (node: Tree<ProcessTerminal>) => {
   activeProcessTerminal.value = null;
   if (node.type === 'terminal' && !node.children?.length) return;
   if (node.type === 'terminal') {
-    activeProcessTerminal.value = node.children[0];
+    activeProcessTerminal.value = node.children?.[0] || null;
   }else {
     activeProcessTerminal.value = node;
   }
@@ -204,32 +202,36 @@ const createTerminal = async () => {
 // 编辑航站楼
 const updateTerminal = async () => {
   const formData = {
-    id: '',
+    id: 0,
     terminal: '',
     terminalName: ''
   }
   formAssignObject(formData, form.value);
+  formData.id = Number(formData.id);
   return await updateProcessTerminal(formData);
 }
 // 添加货物类型
 const createGoodsType = async () => {
   const formData = {
-    processTerminalId: '',
+    processTerminalId: 0,
     goodsType: '',
     goodsTypeName: ''
   }
   formAssignObject(formData, form.value);
+  formData.processTerminalId = Number(formData.processTerminalId);
   return await createProcessGoodsType(formData);
 }
 // 编辑货物类型
 const updateGoodsType = async () => {
   const formData = {
-    id: '',
-    processTerminalId: '',
+    id: 0,
+    processTerminalId: 0,
     goodsType: '',
     goodsTypeName: ''
   }
   formAssignObject(formData, form.value);
+  formData.id = Number(formData.id);
+  formData.processTerminalId = Number(formData.processTerminalId);
   return await updateProcessGoodsType(formData);
 }
 
@@ -307,7 +309,7 @@ const nodes = ref<Node[]>([
 // 连接线
 const edges = ref<Edge[]>([
   // {id: 1, source: 1, target: 2 },
-  // {id: 2, source: 2, target: 2 },
+  // {id: 2, source: 2, target: 2 }
 ]);
 
 // 获取流程
@@ -323,6 +325,10 @@ const getFlow = async (where = {}) => {
       position: {
         x: Number(item.x),
         y: Number(item.y)
+      },
+      data: {
+        label: item.nodeName,
+        ...item
       }
     }
   }) ?? [];
@@ -352,7 +358,7 @@ const activeFlow = ref({
 const createFlowNode = async () => {
   const formData = {
     arrivalOrDeparture: '',
-    processGoodsTypeId: null,
+    processGoodsTypeId: 0,
     nodeName: '',
     nodeType: '',
     x: 0,
@@ -361,6 +367,7 @@ const createFlowNode = async () => {
     visualizationRegionName: ''
   }
   formAssignObject(formData, activeFlow.value);
+  formData.processGoodsTypeId = Number(formData.processGoodsTypeId) || 0;
   const res = await createProcessFlowNode(formData);
   console.log('res', res);
   await getFlow(params.value)
@@ -438,14 +445,15 @@ onMounted(async () => {
       </template>
       <template #default>
       <!-- 流程图 -->
-          <VueFlow v-model:nodes="nodes" v-model:edges="edges">
-            <Background></Background>
-            <panel>
-              <el-button type="primary" @click="createFlowNode">添加节点</el-button>
-            </panel>
-<!--            <template #node-custom="{ node }"></template>-->
-<!--            <template #edge-custom="{ node }"></template>-->
-          </VueFlow>
+        <CustomFlow :model-value="{ nodes, edges }"></CustomFlow>
+<!--          <VueFlow v-model:nodes="nodes" v-model:edges="edges">-->
+<!--            <Background></Background>-->
+<!--            <panel>-->
+<!--              <el-button type="primary" @click="createFlowNode">添加节点</el-button>-->
+<!--            </panel>-->
+<!--&lt;!&ndash;            <template #node-custom="{ node }"></template>&ndash;&gt;-->
+<!--&lt;!&ndash;            <template #edge-custom="{ node }"></template>&ndash;&gt;-->
+<!--          </VueFlow>-->
       </template>
     </el-card>
   </div>
@@ -565,7 +573,7 @@ onMounted(async () => {
     padding: 0;
   }
   :deep(.el-card__body) {
-    height: calc(100% - 103px);
+    height: calc(100% - 63px);
   }
 }
 

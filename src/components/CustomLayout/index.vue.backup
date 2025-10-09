@@ -1,0 +1,930 @@
+<script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import {
+  Fold,
+  Expand,
+  User,
+  Setting,
+  SwitchButton,
+  Bell,
+  FullScreen,
+  Moon,
+  Sunny,
+  Close
+} from '@element-plus/icons-vue'
+import type {
+  MenuItem,
+  TabItem,
+  BreadcrumbItem,
+  LayoutConfig,
+} from './model.ts'
+
+// Props 定义
+const props = withDefaults(defineProps(), {
+  menus: () => [],
+  userInfo: () => ({
+    id: '1',
+    name: '用户',
+    avatar: '',
+    role: '管理员',
+    department: '技术部'
+  }),
+  config: () => ({
+    sidebarCollapsed: false,
+    showBreadcrumb: true,
+    showTabs: true,
+    theme: 'light',
+    sidebarWidth: 240,
+    collapsedSidebarWidth: 64
+  })
+})
+
+// Emits 定义
+const emit = defineEmits()
+
+// 路由相关
+const route = useRoute()
+const router = useRouter()
+
+// 响应式状态
+const sidebarCollapsed = ref(props.config?.sidebarCollapsed || false)
+const showBreadcrumb = ref(props.config?.showBreadcrumb ?? true)
+const showTabs = ref(props.config?.showTabs ?? true)
+const theme = ref<'light' | 'dark'>(props.config?.theme || 'light')
+const isFullscreen = ref(false)
+const activeMenuId = ref('')
+
+// 移动端侧边栏状态
+const isMobile = ref(false)
+const sidebarOpen = ref(false)
+
+// 标签页相关
+const tabs = ref<TabItem[]>([])
+const activeTabId = ref('')
+
+// 面包屑相关
+const breadcrumbs = ref<BreadcrumbItem[]>([])
+
+// 计算属性
+const sidebarWidth = computed(() =>
+  sidebarCollapsed.value ? props.config?.collapsedSidebarWidth || 64 : props.config?.sidebarWidth || 240
+)
+
+const layoutConfig = computed<LayoutConfig>(() => ({
+  sidebarCollapsed: sidebarCollapsed.value,
+  showBreadcrumb: showBreadcrumb.value,
+  showTabs: showTabs.value,
+  theme: theme.value,
+  sidebarWidth: props.config?.sidebarWidth || 240,
+  collapsedSidebarWidth: props.config?.collapsedSidebarWidth || 64
+}))
+
+// 方法
+const toggleSidebar = () => {
+  if (isMobile.value) {
+    // 移动端：切换侧边栏显示/隐藏
+    sidebarOpen.value = !sidebarOpen.value
+  } else {
+    // 桌面端：切换侧边栏折叠/展开
+    sidebarCollapsed.value = !sidebarCollapsed.value
+  }
+  emit('update:config', layoutConfig.value)
+}
+
+const toggleFullscreen = async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+      isFullscreen.value = true
+    } else {
+      await document.exitFullscreen()
+      isFullscreen.value = false
+    }
+  } catch (error) {
+    ElMessage.error('全屏切换失败')
+  }
+}
+
+const toggleTheme = () => {
+  theme.value = theme.value === 'light' ? 'dark' : 'light'
+  emit('update:config', layoutConfig.value)
+  // 这里可以添加主题切换逻辑
+  document.documentElement.setAttribute('data-theme', theme.value)
+}
+
+const handleMenuClick = (menu: MenuItem) => {
+  activeMenuId.value = menu.id
+  emit('menu-click', menu)
+
+  // 移动端点击菜单后关闭侧边栏
+  if (isMobile.value) {
+    closeMobileSidebar()
+  }
+
+  if (menu.path) {
+    router.push(menu.path)
+    addTab({
+      id: menu.id,
+      title: menu.title,
+      path: menu.path,
+      closable: true
+    })
+  }
+}
+
+const addTab = (tab: TabItem) => {
+  const existingTab = tabs.value.find(t => t.id === tab.id)
+  if (!existingTab) {
+    tabs.value.push(tab)
+  }
+  activeTabId.value = tab.id
+  tabs.value.forEach(t => t.active = t.id === tab.id)
+}
+
+const closeTab = (tab: TabItem) => {
+  const index = tabs.value.findIndex(t => t.id === tab.id)
+  if (index > -1) {
+    tabs.value.splice(index, 1)
+    emit('tab-close', tab)
+
+    // 如果关闭的是当前激活的标签页，切换到其他标签页
+    if (tab.id === activeTabId.value && tabs.value.length > 0) {
+      const newActiveTab = tabs.value[Math.max(0, index - 1)]
+      activeTabId.value = newActiveTab.id
+      router.push(newActiveTab.path)
+    }
+  }
+}
+
+const switchTab = (tab: TabItem) => {
+  activeTabId.value = tab.id
+  tabs.value.forEach(t => t.active = t.id === tab.id)
+  router.push(tab.path)
+  emit('tab-click', tab)
+}
+
+const handleUserAction = (action: string) => {
+  emit('user-action', action)
+  switch (action) {
+    case 'profile':
+      ElMessage.info('个人资料')
+      break
+    case 'settings':
+      ElMessage.info('系统设置')
+      break
+    case 'logout':
+      ElMessage.info('退出登录')
+      break
+  }
+}
+
+// 生成面包屑
+const generateBreadcrumbs = () => {
+  const matched = route.matched.filter(item => item.meta && item.meta.title)
+  breadcrumbs.value = matched.map(item => ({
+    title: item.meta?.title as string,
+    path: item.path,
+    icon: item.meta?.icon as string
+  }))
+}
+
+// 监听路由变化
+watch(route, () => {
+  generateBreadcrumbs()
+}, { immediate: true })
+
+// 监听配置变化
+watch(layoutConfig, (newConfig) => {
+  emit('update:config', newConfig)
+}, { deep: true })
+
+// 检测屏幕尺寸
+const checkScreenSize = () => {
+  isMobile.value = window.innerWidth <= 768
+  if (isMobile.value) {
+    sidebarOpen.value = false
+  }
+}
+
+// 关闭移动端侧边栏
+const closeMobileSidebar = () => {
+  if (isMobile.value) {
+    sidebarOpen.value = false
+  }
+}
+
+// 组件挂载
+onMounted(() => {
+  // 初始化主题
+  document.documentElement.setAttribute('data-theme', theme.value)
+
+  // 检测屏幕尺寸
+  checkScreenSize()
+  window.addEventListener('resize', checkScreenSize)
+
+  // 添加当前路由到标签页
+  if (route.meta?.title) {
+    addTab({
+      id: route.name as string || route.path,
+      title: route.meta.title as string,
+      path: route.path,
+      closable: true
+    })
+  }
+})
+
+// 组件卸载时清理事件监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', checkScreenSize)
+})
+</script>
+
+<template>
+  <div class="layout" :class="{
+    'is-collapsed': sidebarCollapsed,
+    'is-dark': theme === 'dark',
+    'sidebar-open': sidebarOpen && isMobile
+  }">
+    <!-- Header -->
+    <div class="layout-header is-fixed">
+      <!-- Header Left -->
+      <div class="header-left">
+        <!-- 侧边栏折叠按钮 -->
+        <el-button
+          :icon="sidebarCollapsed ? Expand : Fold"
+          circle
+          size="small"
+          @click="toggleSidebar"
+          class="sidebar-toggle"
+        />
+
+        <!-- 面包屑导航 -->
+        <div v-if="showBreadcrumb && breadcrumbs.length > 0" class="header-breadcrumb">
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item
+              v-for="(item, index) in breadcrumbs"
+              :key="index"
+              :to="item.path"
+            >
+              <el-icon v-if="item.icon" class="breadcrumb-icon">
+                <component :is="item.icon" />
+              </el-icon>
+              {{ item.title }}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
+        </div>
+
+        <!-- Header Left Slot -->
+        <div v-if="$slots['header-left']" class="header-left-slot">
+          <slot name="header-left"></slot>
+        </div>
+      </div>
+
+      <!-- Header Center -->
+      <div class="header-center">
+        <slot name="header-center"></slot>
+      </div>
+
+      <!-- Header Right -->
+      <div class="header-right">
+        <!-- 主题切换 -->
+        <el-tooltip content="切换主题" placement="bottom">
+          <el-button
+            :icon="theme === 'light' ? Moon : Sunny"
+            circle
+            size="small"
+            @click="toggleTheme"
+            class="theme-toggle"
+          />
+        </el-tooltip>
+
+        <!-- 全屏切换 -->
+        <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
+          <el-button
+            :icon="FullScreen"
+            circle
+            size="small"
+            @click="toggleFullscreen"
+            class="fullscreen-toggle"
+          />
+        </el-tooltip>
+
+        <!-- 通知 -->
+        <el-badge :value="3" class="notification-badge">
+          <el-button :icon="Bell" circle size="small" class="notification-btn" />
+        </el-badge>
+
+        <!-- 用户信息 -->
+        <el-dropdown @command="handleUserAction" class="user-dropdown">
+          <div class="user-info">
+            <el-avatar
+              :size="32"
+              :src="props.userInfo?.avatar"
+              class="user-avatar"
+            >
+              <el-icon><User /></el-icon>
+            </el-avatar>
+            <div class="user-details" v-if="!sidebarCollapsed">
+              <div class="user-name">{{ props.userInfo?.name }}</div>
+              <div class="user-role">{{ props.userInfo?.role }}</div>
+            </div>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="profile">
+                <el-icon><User /></el-icon>
+                个人资料
+              </el-dropdown-item>
+              <el-dropdown-item command="settings">
+                <el-icon><Setting /></el-icon>
+                系统设置
+              </el-dropdown-item>
+              <el-dropdown-item divided command="logout">
+                <el-icon><SwitchButton /></el-icon>
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
+        <!-- Header Right Slot -->
+        <div v-if="$slots['header-right']" class="header-right-slot">
+          <slot name="header-right"></slot>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="layout-main is-row-direction">
+      <!-- Sidebar -->
+      <div
+        class="layout-sidebar is-fixed"
+        :style="{ width: sidebarWidth + 'px' }"
+      >
+        <div class="sidebar-content">
+          <!-- Logo -->
+          <div class="sidebar-logo">
+            <img v-if="!sidebarCollapsed" src="/vite.svg" alt="Logo" class="logo-img" />
+            <img v-else src="/vite.svg" alt="Logo" class="logo-img-small" />
+            <span v-if="!sidebarCollapsed" class="logo-text">海关系统</span>
+          </div>
+
+          <!-- 菜单 -->
+          <el-menu
+            :default-active="activeMenuId"
+            :collapse="sidebarCollapsed"
+            :unique-opened="true"
+            class="sidebar-menu"
+            @select="(key) => {
+              const menu = props.menus?.find(m => m.id === key)
+              if (menu) handleMenuClick(menu)
+            }"
+          >
+            <template v-for="menu in props.menus" :key="menu.id">
+              <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.id">
+                <template #title>
+                  <el-icon v-if="menu.icon">
+                    <component :is="menu.icon" />
+                  </el-icon>
+                  <span>{{ menu.title }}</span>
+                </template>
+                <el-menu-item
+                  v-for="child in menu.children"
+                  :key="child.id"
+                  :index="child.id"
+                >
+                  <el-icon v-if="child.icon">
+                    <component :is="child.icon" />
+                  </el-icon>
+                  <span>{{ child.title }}</span>
+                </el-menu-item>
+              </el-sub-menu>
+              <el-menu-item v-else :index="menu.id">
+                <el-icon v-if="menu.icon">
+                  <component :is="menu.icon" />
+                </el-icon>
+                <span>{{ menu.title }}</span>
+              </el-menu-item>
+            </template>
+          </el-menu>
+        </div>
+      </div>
+
+      <!-- 移动端侧边栏遮罩层 -->
+      <div
+        v-if="isMobile && sidebarOpen"
+        class="sidebar-mask"
+        @click="closeMobileSidebar"
+      ></div>
+
+      <!-- Main Content -->
+      <div class="layout-body" :style="isMobile ? {} : { marginLeft: sidebarWidth + 'px', width: `calc(100% - ${sidebarWidth}px)` }">
+        <!-- 标签页 -->
+        <div v-if="showTabs && tabs.length > 0" class="layout-tabs-wrapper">
+          <div class="tabs-container">
+            <div class="tabs-list">
+              <div
+                v-for="tab in tabs"
+                :key="tab.id"
+                :class="['tab-item', { 'is-active': tab.active }]"
+                @click="switchTab(tab)"
+              >
+                <span class="tab-title">{{ tab.title }}</span>
+                <el-icon
+                  v-if="tab.closable && tabs.length > 1"
+                  class="tab-close"
+                  @click.stop="closeTab(tab)"
+                >
+                  <Close />
+                </el-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="layout-content-wrapper">
+          <div class="layout-page">
+            <slot name="default"></slot>
+          </div>
+          <div v-if="$slots['layout-footer']" class="layout-footer">
+            <slot name="layout-footer"></slot>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.layout {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: max-content;
+  min-height: 100vh;
+  min-height: 100dvh;
+  z-index: 1000;
+  background: var(--el-bg-color-page);
+  transition: all 0.3s ease;
+
+  &.is-row-direction {
+    flex-direction: row;
+  }
+
+  &.is-dark {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+}
+
+// Header 样式
+.layout-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 16px;
+  background: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  transition: all 0.3s ease;
+  z-index: 1004;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+
+  &.is-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+
+    .sidebar-toggle {
+      margin-right: 8px;
+    }
+
+    .header-breadcrumb {
+      .breadcrumb-icon {
+        margin-right: 4px;
+      }
+    }
+
+    .header-left-slot {
+      margin-left: 16px;
+    }
+  }
+
+  .header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .theme-toggle,
+    .fullscreen-toggle,
+    .notification-btn {
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    .notification-badge {
+      .el-badge__content {
+        top: 8px;
+        right: 8px;
+      }
+    }
+
+    .user-dropdown {
+      cursor: pointer;
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: var(--el-fill-color-light);
+        }
+
+        .user-avatar {
+          flex-shrink: 0;
+        }
+
+        .user-details {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.2;
+
+          .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--el-text-color-primary);
+          }
+
+          .user-role {
+            font-size: 12px;
+            color: var(--el-text-color-secondary);
+          }
+        }
+      }
+    }
+
+    .header-right-slot {
+      margin-left: 16px;
+    }
+  }
+}
+
+// Main 样式
+.layout-main {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 60px; // 为固定头部留出空间
+
+  &.is-row-direction {
+    flex-direction: row;
+  }
+}
+
+// Sidebar 样式
+.layout-sidebar {
+  background: var(--el-bg-color);
+  border-right: 1px solid var(--el-border-color-lighter);
+  box-shadow: 2px 0 8px rgba(0, 21, 41, 0.08);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+
+  &.is-fixed {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
+    z-index: 1003;
+  }
+
+  .sidebar-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+      background: var(--el-bg-color);
+
+      .logo-img {
+        width: 32px;
+        height: 32px;
+        margin-right: 12px;
+      }
+
+      .logo-img-small {
+        width: 24px;
+        height: 24px;
+        margin: 0 auto;
+      }
+
+      .logo-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--el-color-primary);
+        white-space: nowrap;
+      }
+    }
+
+    .sidebar-menu {
+      flex: 1;
+      border: none;
+      background: transparent;
+
+      :deep(.el-menu-item),
+      :deep(.el-sub-menu__title) {
+        height: 48px;
+        line-height: 48px;
+        margin: 2px 8px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: var(--el-color-primary-light-9);
+          color: var(--el-color-primary);
+        }
+
+        &.is-active {
+          background-color: var(--el-color-primary-light-8);
+          color: var(--el-color-primary);
+          font-weight: 500;
+        }
+      }
+
+      :deep(.el-sub-menu) {
+        .el-menu-item {
+          margin: 1px 16px;
+          height: 40px;
+          line-height: 40px;
+          padding-left: 24px !important;
+        }
+      }
+    }
+  }
+}
+
+// Layout Body 样式
+.layout-body {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  position: relative;
+  z-index: 1001;
+  overflow-x: auto;
+  max-width: 100vw;
+  box-sizing: border-box;
+
+  &.is-row-direction {
+    flex-direction: row;
+  }
+
+  .layout-tabs-wrapper {
+    background: var(--el-bg-color);
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+    z-index: 1002;
+
+    &.is-fixed {
+      position: sticky;
+      top: 60px;
+    }
+
+    .tabs-container {
+      height: 40px;
+      overflow: hidden;
+
+      .tabs-list {
+        display: flex;
+        height: 100%;
+        padding: 0 16px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
+
+        .tab-item {
+          display: flex;
+          align-items: center;
+          padding: 0 16px;
+          margin-right: 4px;
+          background: var(--el-fill-color-light);
+          border: 1px solid var(--el-border-color-lighter);
+          border-radius: 6px 6px 0 0;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+          min-width: 120px;
+
+          &:hover {
+            background: var(--el-fill-color);
+            border-color: var(--el-border-color);
+          }
+
+          &.is-active {
+            background: var(--el-bg-color);
+            border-color: var(--el-color-primary);
+            color: var(--el-color-primary);
+            font-weight: 500;
+          }
+
+          .tab-title {
+            flex: 1;
+            font-size: 14px;
+          }
+
+          .tab-close {
+            margin-left: 8px;
+            padding: 2px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: var(--el-color-danger-light-8);
+              color: var(--el-color-danger);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .layout-content-wrapper {
+    position: relative;
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--el-bg-color-page);
+    min-height: 0;
+    z-index: 1002;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+
+    .layout-page {
+      flex: auto;
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .layout-footer {
+      padding: 16px;
+      text-align: center;
+      background: var(--el-bg-color);
+      border-top: 1px solid var(--el-border-color-lighter);
+      color: var(--el-text-color-secondary);
+      font-size: 14px;
+    }
+  }
+}
+
+// 移动端侧边栏遮罩层
+.sidebar-mask {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1002;
+  transition: opacity 0.3s ease;
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .layout {
+    // 在小屏幕上，默认折叠侧边栏
+    .layout-sidebar {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      height: calc(100vh - 60px);
+      z-index: 1005;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .layout-body {
+      margin-left: 0 !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+    }
+
+    // 当侧边栏展开时
+    &.sidebar-open {
+      .layout-sidebar {
+        transform: translateX(0);
+      }
+    }
+  }
+
+  .layout-header {
+    padding: 0 12px;
+
+    .header-left {
+      gap: 8px;
+
+      .header-breadcrumb {
+        display: none;
+      }
+    }
+
+    .header-right {
+      gap: 8px;
+
+      .user-info .user-details {
+        display: none;
+      }
+    }
+  }
+}
+
+// 暗色主题
+.layout.is-dark {
+  .layout-header {
+    background: #1a1a1a;
+    border-bottom-color: #333;
+
+    .header-right .user-info:hover {
+      background-color: #333;
+    }
+  }
+
+  .layout-sidebar {
+    background: #1a1a1a;
+    border-right-color: #333;
+
+    .sidebar-logo {
+      background: #1a1a1a;
+      border-bottom-color: #333;
+    }
+  }
+
+  .layout-body {
+    .layout-tabs-wrapper {
+      background: #1a1a1a;
+      border-bottom-color: #333;
+
+      .tabs-container .tabs-list .tab-item {
+        background: #333;
+        border-color: #444;
+
+        &:hover {
+          background: #444;
+        }
+
+        &.is-active {
+          background: #1a1a1a;
+        }
+      }
+    }
+
+    .layout-content-wrapper {
+      background: #0f0f0f;
+
+      .layout-footer {
+        background: #1a1a1a;
+        border-top-color: #333;
+      }
+    }
+  }
+}
+</style>
