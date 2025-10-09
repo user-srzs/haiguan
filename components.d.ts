@@ -7,7 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Breadcrumb: typeof import('./src/components/CustomLayout/components/Breadcrumb.vue')['default']
+    Breadcrumb: typeof import('./src/layout/components/Breadcrumb.vue')['default']
     Collapse: typeof import('./src/components/CustomLayout/components/Collapse.vue')['default']
     ContextMenu: typeof import('./src/components/custom-flow/components/ContextMenu.vue')['default']
     CustomFlow: typeof import('./src/components/custom-flow/index.vue')['default']
@@ -55,8 +55,8 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/custom-flow/components/Sidebar.vue')['default']
-    SidebarMenu: typeof import('./src/components/CustomLayout/components/SidebarMenu.vue')['default']
+    SidebarMenu: typeof import('./src/layout/components/SidebarMenu.vue')['default']
     StartNode: typeof import('./src/components/custom-flow/nodes/StartNode.vue')['default']
-    UserDropdown: typeof import('./src/components/CustomLayout/components/UserDropdown.vue')['default']
+    UserDropdown: typeof import('./src/layout/components/UserDropdown.vue')['default']
   }
 }

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { FullScreen } from '@element-plus/icons-vue';
-import SidebarMenu from '@/components/CustomLayout/components/SidebarMenu.vue';
-import Breadcrumb from '@/components/CustomLayout/components/Breadcrumb.vue';
+import SidebarMenu from '@/layout/components/SidebarMenu.vue';
+import Breadcrumb from '@/layout/components/Breadcrumb.vue';
+import UserDropdown from '@/layout/components/UserDropdown.vue';
 import { useUserStore } from '@/stores/modules/user.ts';
 const userStore = useUserStore();
 const logo = ref('https://element-plus.org/images/element-plus-logo.svg')
@@ -37,8 +38,7 @@ const toggleFullscreen = async () => {
 
 /** ------------- 页面挂载后执行 ----------------- */
 onMounted(() => {
-  console.log('userStore', userStore);
-  console.log('menus', menus);
+
 });
 </script>
 

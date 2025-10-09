@@ -6,7 +6,6 @@ import { mapTree, isExternalLink } from '@/utils/index.ts';
 import type { MenuItem } from '@/router/model.ts';
 import { filterAsyncRoutes } from '@/utils/router-util.ts';
 import {
-  MENUS_CACHE_NAME,
   ROLES_CACHE_NAME,
   USER_CACHE_NAME,
   USER_MENUS
@@ -147,15 +146,6 @@ export const useUserStore = defineStore('user', {
         deserialize: (value: string) => ({ roles: JSON.parse(value) })
       }
     },
-    // {
-    //   key: MENUS_CACHE_NAME,
-    //   storage: localStorage,
-    //   paths: ['menus'],
-    //   serializer: {
-    //     serialize: (state: any) => JSON.stringify(state.menus),
-    //     deserialize: (value: string) => ({ menus: JSON.parse(value) })
-    //   }
-    // },
     {
       key: 'user-authorities',
       storage: localStorage,
