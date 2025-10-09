@@ -1,199 +1,188 @@
-import type { RouteRecordNormalized } from 'vue-router'
-
-// 路由菜单项接口
-export interface MenuItem {
-  path: string
-  name?: string
-  title?: string
-  icon?: string
-  children?: MenuItem[]
-  redirect?: string
-  meta?: {
-    title?: string
-    icon?: string
-    hidden?: boolean
-  }
-}
+/**
+ * 路由工具函数
+ */
+import type { MenuItem } from '@/router/model.ts';
+import { HOME_PATH } from '@/config/seeting.ts';
 
 // 面包屑项接口
 export interface BreadcrumbItem {
-  path: string
-  title: string
-  icon?: string
+  path: string;
+  title: string;
+  icon?: string;
 }
 
 /**
- * 检查路由是否应该被过滤（仅包含重定向的子路由）
- * @param route 路由对象
- * @returns 是否应该被过滤
+ * 判断菜单项是否应该被过滤（仅包含重定向的子菜单）
+ * @param menuItem 菜单项
+ * @returns 是否应该过滤
  */
-export function shouldFilterRoute(route: RouteRecordNormalized): boolean {
-  // 如果没有子路由，不过滤
-  if (!route.children || route.children.length === 0) {
-    return false
+function shouldFilterMenuItem(menuItem: MenuItem): boolean {
+  // 如果没有子菜单，不过滤
+  if (!menuItem.children || menuItem.children.length === 0) {
+    return false;
   }
   
-  // 如果子路由数量大于1，不过滤
-  if (route.children.length > 1) {
-    return false
+  // 如果只有一个子菜单且是重定向菜单，则过滤掉
+  if (menuItem.children.length === 1) {
+    const child = menuItem.children[0];
+    if (child.path === menuItem.redirect) {
+      return true;
+    }
   }
   
-  // 如果只有一个子路由，检查是否是重定向路由
-  const child = route.children[0]
-  return child.path === route.redirect
+  return false;
 }
 
 /**
- * 过滤路由，排除仅包含重定向的子路由
- * @param routes 路由数组
- * @returns 过滤后的路由数组
+ * 过滤菜单项，移除仅包含重定向的子菜单
+ * @param menuItems 菜单项数组
+ * @returns 过滤后的菜单项数组
  */
-export function filterRoutes(routes: RouteRecordNormalized[]): RouteRecordNormalized[] {
-  return routes.filter(route => {
-    // 过滤掉隐藏的路由
-    if (route.meta?.hidden) {
-      return false
-    }
-    
-    // 过滤掉仅包含重定向的子路由
-    if (shouldFilterRoute(route)) {
-      return false
-    }
-    
-    // 递归过滤子路由
-    if (route.children && route.children.length > 0) {
-      route.children = filterRoutes(route.children)
-    }
-    
-    return true
-  })
+export function filterMenuItems(menuItems: MenuItem[]): MenuItem[] {
+  return menuItems
+    .filter(item => {
+      // 过滤掉隐藏的菜单
+      if (item.meta?.hide) {
+        return false;
+      }
+      
+      // 过滤掉仅包含重定向的子菜单
+      return !shouldFilterMenuItem(item);
+    })
+    .map(item => ({
+      ...item,
+      children: item.children ? filterMenuItems(item.children) : undefined
+    }));
 }
 
 /**
- * 将Vue Router路由转换为菜单项
- * @param routes 路由数组
- * @returns 菜单项数组
- */
-export function routesToMenuItems(routes: RouteRecordNormalized[]): MenuItem[] {
-  return routes.map(route => ({
-    path: route.path,
-    name: route.name as string,
-    title: route.meta?.title || route.name as string,
-    icon: route.meta?.icon,
-    children: route.children && route.children.length > 0 
-      ? routesToMenuItems(route.children) 
-      : undefined,
-    redirect: route.redirect as string,
-    meta: route.meta
-  }))
-}
-
-/**
- * 根据当前路径生成面包屑
+ * 生成面包屑
  * @param currentPath 当前路径
- * @param routes 路由配置
- * @param homePath 首页路径
+ * @param menuItems 菜单项数组
  * @returns 面包屑数组
  */
 export function generateBreadcrumbs(
   currentPath: string, 
-  routes: RouteRecordNormalized[], 
-  homePath: string = '/home'
+  menuItems: MenuItem[]
 ): BreadcrumbItem[] {
-  const breadcrumbs: BreadcrumbItem[] = []
+  const breadcrumbs: BreadcrumbItem[] = [];
   
   // 添加首页
   breadcrumbs.push({
-    path: homePath,
+    path: HOME_PATH,
     title: '首页',
     icon: 'House'
-  })
+  });
   
   // 如果当前路径就是首页，直接返回
-  if (currentPath === homePath) {
-    return breadcrumbs
+  if (currentPath === HOME_PATH) {
+    return breadcrumbs;
   }
   
-  // 递归查找当前路径在路由树中的位置
-  function findPathInRoutes(
-    targetPath: string, 
-    routes: RouteRecordNormalized[], 
-    parentPath: string = ''
-  ): BreadcrumbItem[] {
-    for (const route of routes) {
-      const fullPath = parentPath + route.path
-      
-      // 如果找到匹配的路由
-      if (fullPath === targetPath || route.path === targetPath) {
-        return [{
-          path: fullPath,
-          title: route.meta?.title || route.name as string || '未知页面',
-          icon: route.meta?.icon
-        }]
+  // 递归查找当前路径对应的菜单项
+  function findMenuItem(path: string, items: MenuItem[]): MenuItem | null {
+    for (const item of items) {
+      if (item.path === path) {
+        return item;
+      }
+      if (item.children) {
+        const found = findMenuItem(path, item.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  
+  // 递归构建面包屑路径
+  function buildBreadcrumbPath(path: string, items: MenuItem[]): string[] {
+    const pathSegments: string[] = [];
+    
+    for (const item of items) {
+      if (item.path === path) {
+        pathSegments.push(item.path);
+        return pathSegments;
       }
       
-      // 如果有子路由，递归查找
-      if (route.children && route.children.length > 0) {
-        const childResult = findPathInRoutes(targetPath, route.children, fullPath)
-        if (childResult.length > 0) {
-          // 添加当前路由到面包屑
-          const currentBreadcrumb = {
-            path: fullPath,
-            title: route.meta?.title || route.name as string || '未知页面',
-            icon: route.meta?.icon
-          }
-          return [currentBreadcrumb, ...childResult]
+      if (item.children) {
+        const childPath = buildBreadcrumbPath(path, item.children);
+        if (childPath.length > 0) {
+          pathSegments.push(item.path);
+          pathSegments.push(...childPath);
+          return pathSegments;
         }
       }
     }
-    return []
+    
+    return pathSegments;
   }
   
-  // 查找路径
-  const pathBreadcrumbs = findPathInRoutes(currentPath, routes)
-  breadcrumbs.push(...pathBreadcrumbs)
+  const pathSegments = buildBreadcrumbPath(currentPath, menuItems);
   
-  return breadcrumbs
+  // 为每个路径段生成面包屑项
+  for (const segment of pathSegments) {
+    const menuItem = findMenuItem(segment, menuItems);
+    if (menuItem && menuItem.meta?.title) {
+      breadcrumbs.push({
+        path: menuItem.path,
+        title: menuItem.meta.title,
+        icon: menuItem.meta.icon
+      });
+    }
+  }
+  
+  return breadcrumbs;
 }
 
 /**
- * 获取当前激活的菜单项路径
+ * 获取激活的菜单路径
  * @param currentPath 当前路径
- * @param routes 路由配置
+ * @param menuItems 菜单项数组
  * @returns 激活的菜单路径
  */
 export function getActiveMenuPath(
   currentPath: string, 
-  routes: RouteRecordNormalized[]
-): string {
-  // 递归查找最匹配的菜单路径
-  function findActivePath(
-    targetPath: string, 
-    routes: RouteRecordNormalized[], 
-    parentPath: string = ''
-  ): string {
-    for (const route of routes) {
-      const fullPath = parentPath + route.path
-      
-      // 如果完全匹配
-      if (fullPath === targetPath || route.path === targetPath) {
-        return fullPath
+  menuItems: MenuItem[]
+): string[] {
+  const activePath: string[] = [];
+  
+  function findActivePath(path: string, items: MenuItem[]): boolean {
+    for (const item of items) {
+      if (item.path === path) {
+        activePath.push(item.path);
+        return true;
       }
       
-      // 如果当前路径以这个路由开头，继续在子路由中查找
-      if (targetPath.startsWith(fullPath + '/') || targetPath.startsWith(route.path + '/')) {
-        if (route.children && route.children.length > 0) {
-          const childResult = findActivePath(targetPath, route.children, fullPath)
-          if (childResult) {
-            return childResult
-          }
+      if (item.children) {
+        activePath.push(item.path);
+        if (findActivePath(path, item.children)) {
+          return true;
         }
-        // 如果没有子路由匹配，返回当前路由
-        return fullPath
+        activePath.pop();
       }
     }
-    return ''
+    return false;
   }
   
-  return findActivePath(currentPath, routes)
+  findActivePath(currentPath, menuItems);
+  return activePath;
+}
+
+/**
+ * 检查路径是否匹配（支持动态路由）
+ * @param currentPath 当前路径
+ * @param menuPath 菜单路径
+ * @returns 是否匹配
+ */
+export function isPathMatch(currentPath: string, menuPath: string): boolean {
+  // 完全匹配
+  if (currentPath === menuPath) {
+    return true;
+  }
+  
+  // 检查是否是子路径
+  if (currentPath.startsWith(menuPath + '/')) {
+    return true;
+  }
+  
+  return false;
 }
