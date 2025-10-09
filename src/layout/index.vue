@@ -73,7 +73,7 @@ onMounted(() => {
       <UserDropdown :collapse="collapse" />
     </template>
     <template #sidebar>
-      <SidebarMenu :menus="menus"/>
+      <SidebarMenu :menus="menus" :collapse="collapse"/>
     </template>
   </CustomLayout>
 </template>

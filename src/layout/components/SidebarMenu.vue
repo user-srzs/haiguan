@@ -5,11 +5,10 @@
     :unique-opened="true"
     :router="true"
     class="sidebar-menu"
-    @select="handleMenuSelect"
   >
     <template v-for="item in filteredMenus" :key="item.path">
       <!-- 有子菜单的情况 -->
-      <el-sub-menu v-if="item.children && item.children.length > 0" :index="item.path">
+      <el-sub-menu v-if="!!item?.children?.length" :index="item.path">
         <template #title>
           <el-icon v-if="item.meta?.icon">
             <component :is="getIconComponent(item.meta.icon)" />
@@ -19,14 +18,13 @@
         
         <template v-for="child in item.children" :key="child.path">
           <!-- 子菜单还有子菜单 -->
-          <el-sub-menu v-if="child.children && child.children.length > 0" :index="child.path">
+          <el-sub-menu v-if="!!child?.children?.length" :index="child.path">
             <template #title>
               <el-icon v-if="child.meta?.icon">
                 <component :is="getIconComponent(child.meta.icon)" />
               </el-icon>
               <span>{{ child.meta?.title || child.name }}</span>
             </template>
-            
             <el-menu-item
               v-for="grandChild in child.children"
               :key="grandChild.path"
@@ -35,16 +33,20 @@
               <el-icon v-if="grandChild.meta?.icon">
                 <component :is="getIconComponent(grandChild.meta.icon)" />
               </el-icon>
-              <span>{{ grandChild.meta?.title || grandChild.name }}</span>
+              <template #title>
+                <span>{{ grandChild.meta?.title || grandChild.name }}</span>
+              </template>
             </el-menu-item>
           </el-sub-menu>
           
           <!-- 子菜单没有子菜单 -->
-          <el-menu-item v-else :index="child.path">
+          <el-menu-item :index="child.path">
             <el-icon v-if="child.meta?.icon">
               <component :is="getIconComponent(child.meta.icon)" />
             </el-icon>
-            <span>{{ child.meta?.title || child.name }}</span>
+            <template #title>
+              <span>{{ child.meta?.title || child.name }}</span>
+            </template>
           </el-menu-item>
         </template>
       </el-sub-menu>
@@ -54,14 +56,16 @@
         <el-icon v-if="item.meta?.icon">
           <component :is="getIconComponent(item.meta.icon)" />
         </el-icon>
-        <span>{{ item.meta?.title || item.name }}</span>
+        <template #title>
+          <span>{{ item.meta?.title || item.name }}</span>
+        </template>
       </el-menu-item>
     </template>
   </el-menu>
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { filterMenuItems, getActiveMenuPath, isPathMatch } from '@/utils/routeUtils';
 import type { MenuItem } from '@/router/model.ts';
 
@@ -81,7 +85,6 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const route = useRoute();
-const router = useRouter();
 
 // 过滤后的菜单
 const filteredMenus = computed(() => {
@@ -117,13 +120,6 @@ const updateActiveMenu = () => {
   }
 };
 
-// 处理菜单选择
-const handleMenuSelect = (index: string) => {
-  if (index && index !== route.path) {
-    router.push(index);
-  }
-};
-
 // 获取图标组件
 const getIconComponent = (iconName: string) => {
   // 这里可以根据iconName动态导入图标组件
@@ -153,30 +149,5 @@ watch(
 <style scoped lang="scss">
 .sidebar-menu {
   border-right: none;
-  
-  .el-menu-item,
-  .el-sub-menu__title {
-    height: 50px;
-    line-height: 50px;
-    
-    .el-icon {
-      margin-right: 8px;
-    }
-  }
-  
-  .el-sub-menu {
-    .el-menu-item {
-      height: 45px;
-      line-height: 45px;
-      padding-left: 50px !important;
-    }
-  }
-  
-  // 二级子菜单
-  .el-sub-menu .el-sub-menu {
-    .el-menu-item {
-      padding-left: 70px !important;
-    }
-  }
 }
 </style>
