@@ -4,9 +4,7 @@ import '@logicflow/core/lib/style/index.css'
 import { DndPanel, SelectionSelect, Menu } from '@logicflow/extension'
 import '@logicflow/extension/lib/style/index.css'
 import { ElMessage } from 'element-plus'
-
 // 导入自定义组件
-import Sidebar from './components/Sidebar.vue'
 import EditDialog from './components/EditDialog.vue'
 
 // 禁用属性继承，手动控制属性传递
@@ -53,57 +51,9 @@ let lf: LogicFlow | null = null
 const containerRef = ref<HTMLElement>()
 
 // 节点和边的数据
-const nodes = ref([
-  {
-    id: '1',
-    type: 'circle',
-    x: 100,
-    y: 100,
-    text: '开始'
-  },
-  {
-    id: '2',
-    type: 'rect',
-    x: 100,
-    y: 250,
-    text: '用户任务'
-  },
-  {
-    id: '3',
-    type: 'diamond',
-    x: 100,
-    y: 400,
-    text: '判断条件'
-  },
-  {
-    id: '4',
-    type: 'circle',
-    x: 300,
-    y: 400,
-    text: '结束'
-  }
-])
+const nodes = ref([])
 
-const edges = ref([
-  {
-    id: 'edge-1',
-    sourceNodeId: '1',
-    targetNodeId: '2',
-    type: 'polyline'
-  },
-  {
-    id: 'edge-2',
-    sourceNodeId: '2',
-    targetNodeId: '3',
-    type: 'polyline'
-  },
-  {
-    id: 'edge-3',
-    sourceNodeId: '3',
-    targetNodeId: '4',
-    type: 'polyline'
-  }
-])
+const edges = ref([])
 
 // 初始化 LogicFlow
 const initLogicFlow = () => {
@@ -116,11 +66,11 @@ const initLogicFlow = () => {
 
   lf = new LogicFlow({
     container: containerRef.value,
-    width: 800,
-    height: 600,
+    edgeType: 'bezier',
     background: {
       backgroundColor: '#f8fafc'
     },
+    allowResize: true,
     grid: {
       size: 20,
       visible: true
@@ -128,9 +78,31 @@ const initLogicFlow = () => {
     keyboard: {
       enabled: true
     },
+    style: {
+      arrow: {
+        offset: 10,
+        verticalLength: 5,
+        endArrowType: 'none'
+      },
+      baseNode: {
+        stroke: "var(--el-color-primary)",
+      },
+      baseEdge: {
+        stroke: "var(--el-color-primary)",
+      },
+      anchorLine: {
+        stroke: "var(--el-color-primary)",
+      },
+      outline: {
+        stroke: "var(--el-color-primary)",
+        hover: {
+          stroke: "var(--el-color-primary)",
+        },
+      }
+    },
+    themeMode: 'radius',
     plugins: [DndPanel, SelectionSelect, Menu]
   })
-
   // 设置拖拽面板
   if (lf?.extension?.dndPanel) {
     (lf.extension.dndPanel as any).setPatternItems([
@@ -142,25 +114,19 @@ const initLogicFlow = () => {
         lf?.once('selection:selected', () => {
           (lf?.extension.selectionSelect as any).closeSelectionSelect()
         })
-      }
+      },
     },
     {
       type: 'circle',
       text: '开始',
       label: '开始节点',
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAnBJREFUOBGdVL1rU1EcPfdGBddmaZLiEhdx1MHZQXApraCzQ7GKLgoRBxMfcRELuihWKcXFRcEWF8HBf0DdDCKYRZpnl7p0svLe9Zzbd29eQhTbC8nv+9zf130AT63jvooOGS8Vf9Nt5zxba7sXQwODfkWpkbjTQfCGUd9gIp3uuPP8bZ946g56dYQvnBg+b1HB8VIQmMFrazKcKSvFW2dQTxJnJdQ77urmXWOMBCmXM2Rke4S7UAW+/8ywwFoewmBps2tu7mbTdp8VMOkIRAkKfrVawalJTtIliclFbaOBqa0M2xImHeVIfd/nKAfVq/LGnPss5Kh00VEdSzfwnBXPUpmykNss4lUI9C1ga+8PNrBD5YeqRY2Zz8PhjooIbfJXjowvQJBqkmEkVnktWhwu2SM7SMx7Cj0N9IC0oQXRo8xwAGzQms+xrB/nNSUWVveI48ayrFGyC2+E2C+aWrZHXvOuz+CiV6iycWe1Rd1Q6+QUG07nb5SbPrL4426d+9E1axKjY3AoRrlEeSQo2Eu0T6BWAAr6COhTcWjRaYfKG5csnvytvUr/WY4rrPMB53Uo7jZRjXaG6/CFfNMaXEu75nG47X+oepU7PKJvvzGDY1YLSKHJrK7vFUwXKkaxwhCW3u+sDFMVrIju54RYYbFKpALZAo7sB6wcKyyrd+aBMryMT2gPyD6GsQoRFkGHr14TthZni9ck0z+Pnmee460mHXbRAypKNy3nuMdrWgVKj8YVV8E7PSzp1BZ9SJnJAsXdryw/h5ctboUVi4AFiCd+lQaYMw5z3LGTBKjLQOeUF35k89f58Vv/tGh+l+PE/wG0rgfIUbZK5AAAAABJRU5ErkJggg==',
+      icon: 'Notification',
     },
     {
       type: 'rect',
       label: '用户任务',
       icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==',
       className: 'important-node'
-    },
-    {
-      type: 'rect',
-      label: '系统任务',
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==',
-      className: 'import_icon'
     },
     {
       type: 'diamond',
@@ -175,49 +141,6 @@ const initLogicFlow = () => {
     }
   ])
   }
-
-  // 设置右键菜单
-  if (lf?.extension?.menu) {
-    (lf.extension.menu as any).addMenuConfig({
-    nodeMenu: [
-      {
-        className: 'lf-menu-delete',
-        text: '删除',
-        icon: true,
-        callback: (node: any) => {
-          lf?.deleteNode(node.id)
-          ElMessage.success('节点已删除')
-        }
-      },
-      {
-        className: 'lf-menu-edit',
-        text: '编辑',
-        icon: true,
-        callback: (node: any) => {
-          editDialog.visible = true
-          editDialog.nodeId = node.id
-          editDialog.nodeLabel = node.text || ''
-        }
-      },
-      {
-        className: 'lf-menu-copy',
-        text: '复制',
-        icon: true,
-        callback: (node: any) => {
-          const newNode = lf?.cloneNode(node.id)
-          if (newNode) {
-            newNode.x = node.x + 50
-            newNode.y = node.y + 50
-            newNode.text = { value: (node.text || '') + ' 副本', x: 0, y: 0 }
-            lf?.addNode(newNode)
-            ElMessage.success('节点已复制')
-          }
-        }
-      }
-    ]
-  })
-  }
-
   // 绑定事件
   if (lf) {
     lf.on('node:click', (data) => {
@@ -469,11 +392,6 @@ defineExpose({
       <!-- LogicFlow 容器 -->
       <div ref="containerRef" class="logic-flow-container"></div>
       
-      <!-- 侧边栏 -->
-      <Sidebar 
-        @node-click="handleSidebarNodeClick"
-      />
-      
       <!-- 操作按钮 -->
       <div class="flow-controls">
         <el-button type="danger" @click="handleClearAll">清空画布</el-button>
@@ -566,5 +484,33 @@ defineExpose({
 
 :deep(.lf-menu-copy) {
   color: #6b7280;
+}
+:deep(.lf-dndpanel) {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  top: 20px;
+  left: 20px;
+  .lf-dnd-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    &:hover {
+      border-color: var(--el-color-primary);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      transform: translateY(-1px);
+      background: rgba(59, 130, 246, 0.15);
+    }
+  }
 }
 </style>
