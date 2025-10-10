@@ -26,6 +26,7 @@ interface Props {
 interface ActiveNode {
   arrivalOrDeparture: string
   processGoodsTypeId: number
+  activeProcessTerminalType: 'terminal' | 'goodsType'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -170,6 +171,85 @@ const delEdge = async (id: any) => {
   }
 }
 
+const isTerminal = computed(() => {
+  return props.activeNode?.activeProcessTerminalType === 'terminal'
+})
+
+const dndPanelPatternItems =computed(() => [
+  {
+    label: '选区',
+    icon: electoral,
+    disabled: isTerminal.value,
+    className: isTerminal.value ? '' : 'hover-item',
+    callback: () => {
+      if(isTerminal.value) {
+        ElMessage.warning('当前选中的节点无法进行此操作!')
+        return;
+      }
+      (lf?.extension.selectionSelect as any).openSelectionSelect()
+      lf?.once('selection:selected', () => {
+        (lf?.extension.selectionSelect as any).closeSelectionSelect()
+      })
+    },
+  },
+  {
+    type: 'circle',
+    text: '开始',
+    label: '开始节点',
+    disabled: isTerminal.value,
+    icon: startNodeIcon,
+    className: isTerminal.value ? '' : 'hover-item',
+    callback: () => {
+      if(isTerminal.value) {
+        ElMessage.warning('当前选中的节点无法进行此操作!')
+        return;
+      }
+    }
+  },
+  {
+    type: 'rect',
+    text: 'text',
+    label: '普通节点',
+    icon: normalNodeIcon,
+    disabled: isTerminal.value,
+    className: isTerminal.value ? '' : 'hover-item',
+    callback: () => {
+      if(isTerminal.value) {
+        ElMessage.warning('当前选中的节点无法进行此操作!')
+        return;
+      }
+    }
+  },
+  {
+    type: 'diamond',
+    text: 'text',
+    label: '条件判断',
+    disabled: isTerminal.value,
+    icon: decisionNodeIcon,
+    className: isTerminal.value ? '' : 'hover-item',
+    callback: () => {
+      if(isTerminal.value) {
+        ElMessage.warning('当前选中的节点无法进行此操作!')
+        return;
+      }
+    }
+  },
+  {
+    type: 'circle',
+    text: '结束',
+    label: '结束节点',
+    disabled: isTerminal.value,
+    icon: endNodeIcon,
+    className: isTerminal.value ? '' : 'hover-item',
+    callback: () => {
+      if(isTerminal.value) {
+        ElMessage.warning('当前选中的节点无法进行此操作!')
+        return;
+      }
+    }
+  }
+])
+
 // 初始化 LogicFlow
 const initLogicFlow = () => {
   if (!containerRef.value) return
@@ -225,51 +305,7 @@ const initLogicFlow = () => {
   })
   // 设置拖拽面板
   if (lf?.extension?.dndPanel) {
-    (lf.extension.dndPanel as any).setPatternItems([
-    {
-      label: '选区',
-      icon: electoral,
-      callback: () => {
-        (lf?.extension.selectionSelect as any).openSelectionSelect()
-        lf?.once('selection:selected', () => {
-          (lf?.extension.selectionSelect as any).closeSelectionSelect()
-        })
-      },
-    },
-    {
-      type: 'circle',
-      text: '开始',
-      label: '开始节点',
-      icon: startNodeIcon
-    },
-    {
-      type: 'rect',
-      text: 'text',
-      label: '普通节点',
-      icon: normalNodeIcon,
-      className: 'important-node'
-    },
-    {
-      type: 'diamond',
-      text: 'text',
-      label: '条件判断',
-      icon: decisionNodeIcon
-    },
-    {
-      type: 'circle',
-      text: '结束',
-      label: '结束节点',
-      icon: endNodeIcon
-      // callback: async (node: any) => {
-      //   const nodeData = {
-      //     ...node,
-      //     nodeName: node.text || '结束节点',
-      //     nodeType: '4'
-      //   }
-      //   await syncNodeToBackend(nodeData, 'create')
-      // }
-    }
-  ])
+    (lf.extension.dndPanel as any).setPatternItems(dndPanelPatternItems.value)
   }
   // 设置右键菜单
   if (lf?.extension?.menu) {
@@ -507,22 +543,37 @@ const initLogicFlow = () => {
   }
 }
 
+const init = () => {
+  if (lf?.extension?.dndPanel) {
+    (lf.extension.dndPanel as any).setPatternItems(dndPanelPatternItems.value)
+  }
+  if(isTerminal.value) {
+    clearAll();
+    return;
+  }
+  getFlow();
+}
+
 // 监听props变化，同步到内部状态
 watch(() => props.activeNode, (newValue) => {
   if (newValue && lf) {
-    getFlow();
+    init();
   }
 }, { immediate: true, deep: true })
 
 // 处理清空画布
 // const handleClearAll = () => {
-//   nodes.value = []
-//   edges.value = []
-//   if (lf) {
-//     lf.clearData()
-//   }
+//   clearAll()
 //   ElMessage.success('画布已清空')
 // }
+
+const clearAll = () => {
+  nodes.value = []
+  edges.value = []
+  if (lf) {
+    lf.clearData()
+  }
+}
 
 // 组件挂载时初始化 LogicFlow
 onMounted(() => {
@@ -536,6 +587,10 @@ onUnmounted(() => {
   if (lf) {
     lf.destroy()
   }
+})
+
+defineExpose({
+  init,
 })
 </script>
 
@@ -670,6 +725,8 @@ onUnmounted(() => {
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
+  }
+  .hover-item {
     &:hover {
       border-color: var(--el-color-primary);
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);

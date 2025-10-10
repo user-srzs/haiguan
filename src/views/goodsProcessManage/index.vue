@@ -286,10 +286,12 @@ const changeTab = async (item: TabItem) => {
 const computedParamsNodes = computed(() => {
   return {
     arrivalOrDeparture: activeTab.value,
-    processGoodsTypeId: activeProcessTerminal.value?.id
+    processGoodsTypeId: activeProcessTerminal.value?.id,
+    activeProcessTerminalType: activeProcessTerminal.value?.type
   }
 })
 
+const flowRef = ref<InstanceType<typeof CustomFlow>>();
 
 /** 初始化挂载完之后执行 */
 onMounted(async () => {
