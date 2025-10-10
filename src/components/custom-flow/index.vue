@@ -127,12 +127,14 @@ const initLogicFlow = () => {
     },
     {
       type: 'rect',
+      text: 'text',
       label: '普通节点',
       icon: normalNodeIcon,
       className: 'important-node'
     },
     {
       type: 'diamond',
+      text: 'text',
       label: '条件判断',
       icon: decisionNodeIcon,
     },
