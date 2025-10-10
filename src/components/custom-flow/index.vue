@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { VueFlow, Panel } from '@vue-flow/core'
-import { Background } from '@vue-flow/background'
+import LogicFlow from '@logicflow/core'
+import '@logicflow/core/lib/style/index.css'
+import { DndPanel, SelectionSelect, Menu } from '@logicflow/extension'
+import '@logicflow/extension/lib/style/index.css'
 import { ElMessage } from 'element-plus'
 
 // 导入自定义组件
 import Sidebar from './components/Sidebar.vue'
-import ContextMenu from './components/ContextMenu.vue'
 import EditDialog from './components/EditDialog.vue'
-import StartNode from './nodes/StartNode.vue'
-import EndNode from './nodes/EndNode.vue'
-import NormalNode from './nodes/NormalNode.vue'
-import DecisionNode from './nodes/DecisionNode.vue'
 
 // 禁用属性继承，手动控制属性传递
 defineOptions({
@@ -34,9 +31,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: { nodes: any[], edges: any[] }]
   'nodes-change': [nodes: any[]]
   'edges-change': [edges: any[]]
-  // Vue Flow 原生事件
-  'nodes-updated': [event: any]
-  'edges-updated': [event: any]
+  // LogicFlow 原生事件
   'node-click': [event: any]
   'edge-click': [event: any]
   'node-drag': [event: any]
@@ -46,10 +41,6 @@ const emit = defineEmits<{
   'connect': [event: any]
   'connect-start': [event: any]
   'connect-end': [event: any]
-  'pane-ready': [event: any]
-  'move': [event: any]
-  'move-start': [event: any]
-  'move-end': [event: any]
   'selection-change': [event: any]
   'viewport-change': [event: any]
   'zoom-change': [event: any]
@@ -57,90 +48,243 @@ const emit = defineEmits<{
   'error': [event: any]
 }>()
 
+// LogicFlow 实例
+let lf: LogicFlow | null = null
+const containerRef = ref<HTMLElement>()
+
 // 节点和边的数据
 const nodes = ref([
   {
     id: '1',
-    type: 'start',
-    position: { x: 100, y: 100 },
-    data: { label: '开始' }
+    type: 'circle',
+    x: 100,
+    y: 100,
+    text: '开始'
   },
   {
     id: '2',
-    type: 'userTask',
-    position: { x: 100, y: 250 },
-    data: { label: '用户任务' }
+    type: 'rect',
+    x: 100,
+    y: 250,
+    text: '用户任务'
   },
   {
     id: '3',
-    type: 'decision',
-    position: { x: 100, y: 400 },
-    data: { label: '判断条件' }
+    type: 'diamond',
+    x: 100,
+    y: 400,
+    text: '判断条件'
   },
   {
     id: '4',
-    type: 'end',
-    position: { x: 300, y: 400 },
-    data: { label: '结束' }
+    type: 'circle',
+    x: 300,
+    y: 400,
+    text: '结束'
   }
 ])
 
 const edges = ref([
   {
     id: 'edge-1',
-    source: '1',
-    target: '2',
-    sourceHandle: '1-bottom',
-    targetHandle: '2-top',
-    type: 'default',
-    animated: false,
+    sourceNodeId: '1',
+    targetNodeId: '2',
+    type: 'polyline'
   },
   {
     id: 'edge-2',
-    source: '2',
-    target: '3',
-    sourceHandle: '2-bottom',
-    targetHandle: '3-top',
-    type: 'default',
-    animated: false,
+    sourceNodeId: '2',
+    targetNodeId: '3',
+    type: 'polyline'
   },
   {
     id: 'edge-3',
-    source: '3',
-    target: '4',
-    sourceHandle: '3-right',
-    targetHandle: '4-left',
-    type: 'default',
-    animated: false,
+    sourceNodeId: '3',
+    targetNodeId: '4',
+    type: 'polyline'
   }
 ])
 
-// 注册自定义节点类型
-const nodeTypes = {
-  start: StartNode,
-  end: EndNode,
-  userTask: NormalNode,
-  systemTask: NormalNode,
-  decision: DecisionNode
+// 初始化 LogicFlow
+const initLogicFlow = () => {
+  if (!containerRef.value) return
+
+  // 使用扩展插件
+  LogicFlow.use(DndPanel)
+  LogicFlow.use(SelectionSelect)
+  LogicFlow.use(Menu)
+
+  lf = new LogicFlow({
+    container: containerRef.value,
+    width: 800,
+    height: 600,
+    background: {
+      backgroundColor: '#f8fafc'
+    },
+    grid: {
+      size: 20,
+      visible: true
+    },
+    keyboard: {
+      enabled: true
+    },
+    plugins: [DndPanel, SelectionSelect, Menu]
+  })
+
+  // 设置拖拽面板
+  if (lf?.extension?.dndPanel) {
+    (lf.extension.dndPanel as any).setPatternItems([
+    {
+      label: '选区',
+      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAOVJREFUOBGtVMENwzAIjKP++2026ETdpv10iy7WFbqFyyW6GBywLCv5gI+Dw2Bluj1znuSjhb99Gkn6QILDY2imo60p8nsnc9bEo3+QJ+AKHfMdZHnl78wyTnyHZD53Zzx73MRSgYvnqgCUHj6gwdck7Zsp1VOrz0Uz8NbKunzAW+Gu4fYW28bUYutYlzSa7B84Fh7d1kjLwhcSdYAYrdkMQVpsBr5XgDGuXwQfQr0y9zwLda+DUYXLaGKdd2ZTtvbolaO87pdo24hP7ov16N0zArH1ur3iwJpXxm+v7oAJNR4JEP8DoAuSFEkYH7cAAAAASUVORK5CYII=',
+      callback: () => {
+        (lf?.extension.selectionSelect as any).openSelectionSelect()
+        lf?.once('selection:selected', () => {
+          (lf?.extension.selectionSelect as any).closeSelectionSelect()
+        })
+      }
+    },
+    {
+      type: 'circle',
+      text: '开始',
+      label: '开始节点',
+      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAnBJREFUOBGdVL1rU1EcPfdGBddmaZLiEhdx1MHZQXApraCzQ7GKLgoRBxMfcRELuihWKcXFRcEWF8HBf0DdDCKYRZpnl7p0svLe9Zzbd29eQhTbC8nv+9zf130AT63jvooOGS8Vf9Nt5zxba7sXQwODfkWpkbjTQfCGUd9gIp3uuPP8bZ946g56dYQvnBg+b1HB8VIQmMFrazKcKSvFW2dQTxJnJdQ77urmXWOMBCmXM2Rke4S7UAW+/8ywwFoewmBps2tu7mbTdp8VMOkIRAkKfrVawalJTtIliclFbaOBqa0M2xImHeVIfd/nKAfVq/LGnPss5Kh00VEdSzfwnBXPUpmykNss4lUI9C1ga+8PNrBD5YeqRY2Zz8PhjooIbfJXjowvQJBqkmEkVnktWhwu2SM7SMx7Cj0N9IC0oQXRo8xwAGzQms+xrB/nNSUWVveI48ayrFGyC2+E2C+aWrZHXvOuz+CiV6iycWe1Rd1Q6+QUG07nb5SbPrL4426d+9E1axKjY3AoRrlEeSQo2Eu0T6BWAAr6COhTcWjRaYfKG5csnvytvUr/WY4rrPMB53Uo7jZRjXaG6/CFfNMaXEu75nG47X+oepU7PKJvvzGDY1YLSKHJrK7vFUwXKkaxwhCW3u+sDFMVrIju54RYYbFKpALZAo7sB6wcKyyrd+aBMryMT2gPyD6GsQoRFkGHr14TthZni9ck0z+Pnmee460mHXbRAypKNy3nuMdrWgVKj8YVV8E7PSzp1BZ9SJnJAsXdryw/h5ctboUVi4AFiCd+lQaYMw5z3LGTBKjLQOeUF35k89f58Vv/tGh+l+PE/wG0rgfIUbZK5AAAAABJRU5ErkJggg==',
+    },
+    {
+      type: 'rect',
+      label: '用户任务',
+      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==',
+      className: 'important-node'
+    },
+    {
+      type: 'rect',
+      label: '系统任务',
+      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==',
+      className: 'import_icon'
+    },
+    {
+      type: 'diamond',
+      label: '条件判断',
+      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAVCAYAAAHeEJUAAAAABGdBTUEAALGPC/xhBQAAAvVJREFUOBGNVEFrE0EU/mY3bQoiFlOkaUJrQUQoWMGePLX24EH0IIoHKQiCV0G8iE1covgLiqA/QTzVm1JPogc9tIJYFaQtlhQxqYjSpunu+L7JvmUTU3AgmTfvffPNN++9WSA1DO182f6xwILzD5btfAoQmwL5KJEwiQyVbSVZ0IgRyV6PTpIJ81E5ZvqfHQR0HUOBHW4L5Et2kQ6Zf7iAOhTFAA8s0pEP7AXO1uAA52SbqGk6h/6J45LaLhO64ByfcUzM39V7ZiAdS2yCePPEIQYvTUHqM/n7dgQNfBKWPjpF4ISk8q3J4nB11qw6X8l+FsF3EhlkEMfrjIer3wJTLwS2aCNcj4DbGxXTw00JmAuO+Ni6bBxVUCvS5d9aa04+so4pHW5jLTywuXAL7jJ+D06sl82Sgl2JuVBQn498zkc2bGKxULHjCnSMadBKYDYYHAtsby1EQ5lNGrQd4Y3v4Zo0XdGEmDno46yCM9Tk+RiJmUYHS/aXHPNTcjxcbTFna000PFJHIVZ5lFRqRpJWk9/+QtlOUYJj9HG5pVFEU7zqIYDVsw2s+AJaD8wTd2umgSCCyUxgGsS1Y6TBwXQQTFuZaHcd8gAGioE90hlsY+wMcs30RduYtxanjMGal8H5dMW67dmT1JFtYUEe8LiQLRsPZ6IIc7A4J5tqco3T0pnv/4u0kyzrYUq7gASuEyI8VXKvB9Odytv6jS/PNaZBln0nioJG/AVQRZvApOdhjj3Jt8QC8Im09SafwdBdvIpztpxWxpeKCC+EsFdS8DCyuCn2munFpL7ctHKp+Xc5cMybeIyMAN33SPL3ZR9QV1XVwLyzHm6Iv0/yeUuUb7PPlZC4D4HZkeu6dpF4v9j9MreGtMbxMMRLIcjJic9yHi7WQ3yVKzZVWUr5UrViJvn1FfUlwe/KYVfYyWRLSGNu16hR01U9IacajXPei0wx/5BqgInvJN+MMNtNme7ReU9SBbgntovn0kKHpFg7UogZvaZiOue/q1SBo9ktHzQAAAAASUVORK5CYII=',
+    },
+    {
+      type: 'circle',
+      text: '结束',
+      label: '结束节点',
+      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAA1BJREFUOBFtVE1IVUEYPXOf+tq40Y3vPcmFIdSjIorWoRG0ERWUgnb5FwVhYQSl72oUoZAboxKNFtWiwKRN0M+jpfSzqJAQclHo001tKkjl3emc8V69igP3znzfnO/M9zcDcKT67azmjYWTwl9Vn7Vumeqzj1DVb6cleQY4oAVnIOPb+mKAGxQmKI5CWNJ2aLPatxWa3aB9K7/fB+/Z0jUF6TmMlFLQqrkECWQzOZxYGjTlOl8eeKaIY5yHnFn486xBustDjWT6dG7pmjHOJd+33t0iitTPkK6tEvjxq4h2MozQ6WFSX/LkDUGfFwfhEZj1Auz/U4pyAi5Sznd7uKzznXeVHlI/Aywmk6j7fsUsEuCGADrWARXXwjxWQsUbIupDHJI7kF5dRktg0eN81IbiZXiTESic50iwS+t1oJgL83jAiBupLDCQqwziaWSoAFSeIR3P5Xv5az00wyIn35QRYTwdSYbz8pH8fxUUAtxnFvYmEmgI0wYXUXcCCspeEVpXlsRhBnCEATxWylL9+EKCAYhe1NGstUa6356kS9NVvt3DU2fd+Wtbm/+lSbylJqsqkSm9CRhvoJVlvKPvF1RKY/FcPn5j4UfIMLn8D4UYb54BNsilTDXKnF4CfTobA0FpoW/LSp306wkXM+XaOJhZaFkcNM82ASNAWMrhrUbRfmyeI1FvRBTpN06WKxa9BK0o2E4Pd3zfBBEwPsv9sQBnmLVbLEIZ/Xe9LYwJu/Er17W6HYVBc7vmuk0xUQ+pqxdom5Fnp55SiytXLPYoMXNM4u4SNSCFWnrVIzKG3EGyMXo6n/BQOe+bX3FClY4PwydVhthOZ9NnS+ntiLh0fxtlUJHAuGaFoVmttpVMeum0p3WEXbcll94l1wM/gZ0Ccczop77VvN2I7TlsZCsuXf1WHvWEhjO8DPtyOVg2/mvK9QqboEth+7pD6NUQC1HN/TwvydGBARi9MZSzLE4b8Ru3XhX2PBxf8E1er2A6516o0w4sIA+lwURhAON82Kwe2iDAC1Watq4XHaGQ7skLcFOtI5lDxuM2gZe6WFIotPAhbaeYlU4to5cuarF1QrcZ/lwrLaCJl66JBocYZnrNlvm2+MBCTmUymPrYZVbjdlr/BxlMjmNmNI3SAAAAAElFTkSuQmCC',
+    }
+  ])
+  }
+
+  // 设置右键菜单
+  if (lf?.extension?.menu) {
+    (lf.extension.menu as any).addMenuConfig({
+    nodeMenu: [
+      {
+        className: 'lf-menu-delete',
+        text: '删除',
+        icon: true,
+        callback: (node: any) => {
+          lf?.deleteNode(node.id)
+          ElMessage.success('节点已删除')
+        }
+      },
+      {
+        className: 'lf-menu-edit',
+        text: '编辑',
+        icon: true,
+        callback: (node: any) => {
+          editDialog.visible = true
+          editDialog.nodeId = node.id
+          editDialog.nodeLabel = node.text || ''
+        }
+      },
+      {
+        className: 'lf-menu-copy',
+        text: '复制',
+        icon: true,
+        callback: (node: any) => {
+          const newNode = lf?.cloneNode(node.id)
+          if (newNode) {
+            newNode.x = node.x + 50
+            newNode.y = node.y + 50
+            newNode.text = { value: (node.text || '') + ' 副本', x: 0, y: 0 }
+            lf?.addNode(newNode)
+            ElMessage.success('节点已复制')
+          }
+        }
+      }
+    ]
+  })
+  }
+
+  // 绑定事件
+  if (lf) {
+    lf.on('node:click', (data) => {
+      emit('node-click', data)
+    })
+
+    lf.on('edge:click', (data) => {
+      emit('edge-click', data)
+    })
+
+    lf.on('node:drag', (data) => {
+      emit('node-drag', data)
+    })
+
+    lf.on('node:drag-stop', (data) => {
+      emit('node-drag-stop', data)
+    })
+
+    lf.on('edge:update', (data) => {
+      emit('edge-update', data)
+    })
+
+    lf.on('edge:update-end', (data) => {
+      emit('edge-update-end', data)
+    })
+
+    lf.on('connection:not-allowed', () => {
+      ElMessage.warning('连接不允许')
+    })
+
+    lf.on('connection:created', (data) => {
+      emit('connect', data)
+    })
+
+    lf.on('selection:selected', (data) => {
+      emit('selection-change', data)
+    })
+
+    lf.on('viewport:change', (data) => {
+      emit('viewport-change', data)
+    })
+
+    lf.on('zoom:change', (data) => {
+      emit('zoom-change', data)
+    })
+
+    // 渲染初始数据
+    lf.render({
+      nodes: nodes.value,
+      edges: edges.value
+    })
+
+    emit('init', lf)
+  }
 }
 
 // 监听props变化，同步到内部状态
 watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
+  if (newValue && lf) {
     nodes.value = newValue.nodes || []
     edges.value = newValue.edges || []
+    lf.render({
+      nodes: nodes.value,
+      edges: edges.value
+    })
   }
 }, { immediate: true, deep: true })
-
-// 监听外部传入的nodes和edges变化
-watch(() => [props.modelValue?.nodes, props.modelValue?.edges], ([newNodes, newEdges]) => {
-  if (newNodes) {
-    nodes.value = newNodes
-  }
-  if (newEdges) {
-    edges.value = newEdges
-  }
-}, { deep: true })
 
 // 监听内部状态变化，同步到父组件
 watch([nodes, edges], ([newNodes, newEdges]) => {
@@ -150,13 +294,6 @@ watch([nodes, edges], ([newNodes, newEdges]) => {
   emit('edges-change', newEdges)
 }, { deep: true })
 
-// 右键菜单状态
-const contextMenu = reactive({
-  visible: false,
-  position: { x: 0, y: 0 },
-  nodeId: ''
-})
-
 // 编辑对话框状态
 const editDialog = reactive({
   visible: false,
@@ -164,63 +301,66 @@ const editDialog = reactive({
   nodeLabel: ''
 })
 
-
 // 节点ID计数器
-let nodeIdCounter = 2
+let nodeIdCounter = 5
 
 // 创建节点
 const createNode = (type: string, position: { x: number, y: number }) => {
   const nodeId = nodeIdCounter.toString()
   nodeIdCounter++
 
-  let nodeData = { label: '' }
+  let nodeText = ''
+  let nodeType = type
   
   switch (type) {
     case 'start':
-      nodeData = { label: '开始' }
+      nodeText = '开始'
+      nodeType = 'circle'
       break
     case 'end':
-      nodeData = { label: '结束' }
+      nodeText = '结束'
+      nodeType = 'circle'
       break
     case 'userTask':
-      nodeData = { label: '用户任务' }
+      nodeText = '用户任务'
+      nodeType = 'rect'
       break
     case 'systemTask':
-      nodeData = { label: '系统任务' }
+      nodeText = '系统任务'
+      nodeType = 'rect'
       break
     case 'decision':
-      nodeData = { label: '判断' }
+      nodeText = '判断'
+      nodeType = 'diamond'
       break
   }
 
   const newNode = {
     id: nodeId,
-    type,
-    position,
-    data: nodeData
+    type: nodeType,
+    x: position.x,
+    y: position.y,
+    text: nodeText
   }
 
   console.log('准备添加节点:', newNode)
   // 使用展开运算符创建新数组，确保响应式更新
   nodes.value = [...nodes.value, newNode]
   console.log('节点已添加，当前节点数量:', nodes.value.length)
-  return newNode
-}
-
-// 处理拖拽开始
-const handleDragStart = (type: string, event: DragEvent) => {
-  console.log('主组件收到拖拽开始事件:', type)
-  if (event.dataTransfer) {
-    event.dataTransfer.setData('application/vueflow', type)
-    event.dataTransfer.effectAllowed = 'copy'
-    console.log('主组件设置拖拽数据:', type)
+  
+  // 同步到 LogicFlow
+  if (lf) {
+    lf.addNode(newNode)
   }
+  
+  return newNode
 }
 
 // 处理侧边栏节点点击
 const handleSidebarNodeClick = (type: string) => {
   if (type === 'selection') {
     // 选择工具逻辑
+    (lf?.extension.selectionSelect as any).openSelectionSelect()
     return
   }
   
@@ -230,116 +370,15 @@ const handleSidebarNodeClick = (type: string) => {
   createNode(type, position)
 }
 
-
-// 处理画布拖拽放置
-const handleDrop = (event: DragEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
-  
-  const type = event.dataTransfer?.getData('application/vueflow')
-  if (!type) {
-    console.log('未找到拖拽数据')
-    return
-  }
-
-  console.log('拖拽类型:', type)
-
-  // 获取VueFlow容器的位置
-  const vueFlowContainer = document.querySelector('.vue-flow')
-  if (!vueFlowContainer) {
-    console.log('未找到VueFlow容器')
-    return
-  }
-  
-  const rect = vueFlowContainer.getBoundingClientRect()
-  
-  // 计算相对于VueFlow容器的位置
-  const position = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
-  }
-
-  console.log('拖拽放置:', { type, position, clientX: event.clientX, clientY: event.clientY, rect })
-  
-  const newNode = createNode(type, position)
-  console.log('创建的新节点:', newNode)
-  console.log('当前所有节点:', nodes.value)
-  
-  // 强制更新VueFlow
-  nextTick(() => {
-    console.log('VueFlow更新后的节点:', nodes.value)
-  })
-}
-
-// 处理拖拽悬停
-const handleDragOver = (event: DragEvent) => {
-  event.preventDefault()
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'copy'
-  }
-}
-
-// 处理拖拽进入
-const handleDragEnter = (event: DragEvent) => {
-  event.preventDefault()
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'copy'
-  }
-}
-
-// 处理节点右键
-const handleNodeContextMenu = (event: MouseEvent, nodeId: string) => {
-  event.preventDefault()
-  event.stopPropagation()
-  
-  contextMenu.visible = true
-  contextMenu.position = { x: event.clientX, y: event.clientY }
-  contextMenu.nodeId = nodeId
-}
-
-// 处理右键菜单操作
-const handleContextMenuEdit = () => {
-  const node = nodes.value.find(n => n.id === contextMenu.nodeId)
-  if (node) {
-    editDialog.visible = true
-    editDialog.nodeId = node.id
-    editDialog.nodeLabel = node.data.label
-  }
-}
-
-const handleContextMenuCopy = () => {
-  const node = nodes.value.find(n => n.id === contextMenu.nodeId)
-  if (node) {
-    const newNode = createNode(node.type, { 
-      x: node.position.x + 50, 
-      y: node.position.y + 50 
-    })
-    newNode.data.label = node.data.label + ' 副本'
-    ElMessage.success('节点已复制')
-  }
-}
-
-const handleContextMenuDelete = () => {
-  const index = nodes.value.findIndex(n => n.id === contextMenu.nodeId)
-  if (index > -1) {
-    nodes.value.splice(index, 1)
-    // 同时删除相关的边
-    edges.value = edges.value.filter(edge => 
-      edge.source !== contextMenu.nodeId && edge.target !== contextMenu.nodeId
-    )
-    ElMessage.success('节点已删除')
-  }
-}
-
-const handleContextMenuClose = () => {
-  contextMenu.visible = false
-}
-
 // 处理编辑确认
 const handleEditConfirm = (label: string) => {
   const node = nodes.value.find(n => n.id === editDialog.nodeId)
   if (node) {
-    node.data.label = label
+    node.text = label
+    // 同步到 LogicFlow
+    if (lf) {
+      lf.setProperties(node.id, { text: label })
+    }
     ElMessage.success('节点文本已更新')
   }
 }
@@ -353,131 +392,60 @@ const handleClearAll = () => {
 // 暴露给父组件的方法
 const addNode = (node: any) => {
   nodes.value = [...nodes.value, node]
+  if (lf) {
+    lf.addNode(node)
+  }
   return node
 }
 
 const removeNode = (nodeId: string) => {
   nodes.value = nodes.value.filter(n => n.id !== nodeId)
   // 同时删除相关的边
-  edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+  edges.value = edges.value.filter(e => e.sourceNodeId !== nodeId && e.targetNodeId !== nodeId)
+  if (lf) {
+    lf.deleteNode(nodeId)
+  }
 }
 
 const addEdge = (edge: any) => {
   edges.value = [...edges.value, edge]
+  if (lf) {
+    lf.addEdge(edge)
+  }
   return edge
 }
 
 const removeEdge = (edgeId: string) => {
   edges.value = edges.value.filter(e => e.id !== edgeId)
+  if (lf) {
+    lf.deleteEdge(edgeId)
+  }
 }
 
 const clearAll = () => {
   nodes.value = []
   edges.value = []
+  if (lf) {
+    lf.clearData()
+  }
 }
 
 const getNodes = () => nodes.value
 const getEdges = () => edges.value
 
-// Vue Flow 原生事件处理器
-const handleNodesUpdated = (event: any) => {
-  emit('nodes-updated', event)
-}
+// 组件挂载时初始化 LogicFlow
+onMounted(() => {
+  nextTick(() => {
+    initLogicFlow()
+  })
+})
 
-const handleEdgesUpdated = (event: any) => {
-  emit('edges-updated', event)
-}
-
-const handleNodeClick = (event: any) => {
-  emit('node-click', event)
-}
-
-const handleEdgeClick = (event: any) => {
-  emit('edge-click', event)
-}
-
-const handleNodeDrag = (event: any) => {
-  emit('node-drag', event)
-}
-
-const handleNodeDragStop = (event: any) => {
-  emit('node-drag-stop', event)
-}
-
-const handleEdgeUpdate = (event: any) => {
-  emit('edge-update', event)
-}
-
-const handleEdgeUpdateEnd = (event: any) => {
-  emit('edge-update-end', event)
-}
-
-const handleConnect = (event: any) => {
-  console.log('连接事件:', event)
-  
-  // 创建新的边
-  const newEdge = {
-    id: `edge-${Date.now()}`,
-    source: event.source,
-    target: event.target,
-    sourceHandle: event.sourceHandle,
-    targetHandle: event.targetHandle,
-    type: 'default',
-    animated: false
+// 组件卸载时清理
+onUnmounted(() => {
+  if (lf) {
+    lf.destroy()
   }
-  
-  // 添加到边数组
-  edges.value = [...edges.value, newEdge]
-  
-  console.log('新边已创建:', newEdge)
-  console.log('当前所有边:', edges.value)
-  
-  emit('connect', event)
-}
-
-const handleConnectStart = (event: any) => {
-  emit('connect-start', event)
-}
-
-const handleConnectEnd = (event: any) => {
-  emit('connect-end', event)
-}
-
-const handlePaneReady = (event: any) => {
-  emit('pane-ready', event)
-}
-
-const handleMove = (event: any) => {
-  emit('move', event)
-}
-
-const handleMoveStart = (event: any) => {
-  emit('move-start', event)
-}
-
-const handleMoveEnd = (event: any) => {
-  emit('move-end', event)
-}
-
-const handleSelectionChange = (event: any) => {
-  emit('selection-change', event)
-}
-
-const handleViewportChange = (event: any) => {
-  emit('viewport-change', event)
-}
-
-const handleZoomChange = (event: any) => {
-  emit('zoom-change', event)
-}
-
-const handleInit = (event: any) => {
-  emit('init', event)
-}
-
-const handleError = (event: any) => {
-  emit('error', event)
-}
+})
 
 // 暴露方法给父组件
 defineExpose({
@@ -498,110 +466,19 @@ defineExpose({
   <div class="flow-container">
     <!-- 主画布区域 -->
     <div class="flow-main">
-      <VueFlow 
-        v-model:nodes="nodes" 
-        v-model:edges="edges"
-        :node-types="nodeTypes"
-        @nodes-updated="handleNodesUpdated"
-        @edges-updated="handleEdgesUpdated"
-        @node-click="handleNodeClick"
-        @edge-click="handleEdgeClick"
-        @node-drag="handleNodeDrag"
-        @node-drag-stop="handleNodeDragStop"
-        @edge-update="handleEdgeUpdate"
-        @edge-update-end="handleEdgeUpdateEnd"
-        @connect="handleConnect"
-        @connect-start="handleConnectStart"
-        @connect-end="handleConnectEnd"
-        @pane-ready="handlePaneReady"
-        @move="handleMove"
-        @move-start="handleMoveStart"
-        @move-end="handleMoveEnd"
-        @selection-change="handleSelectionChange"
-        @viewport-change="handleViewportChange"
-        @zoom-change="handleZoomChange"
-        @init="handleInit"
-        @error="handleError"
-        @drop="handleDrop"
-        @dragover="handleDragOver"
-        @dragenter="handleDragEnter"
-        :nodes-draggable="true"
-        :nodes-connectable="true"
-        :edges-updatable="true"
-        :fit-view-on-init="false"
-        v-bind="$attrs"
-        class="vue-flow"
-      >
-        <!-- 节点工具栏 -->
-        <Sidebar 
-          @node-click="handleSidebarNodeClick"
-          @drag-start="handleDragStart"
-        />
-        <Background />
-        
-        <!-- 操作按钮 -->
-        <Panel position="top-right">
-          <el-button type="danger" @click="handleClearAll">清空画布</el-button>
-        </Panel>
-                
-        <!-- 自定义节点模板 -->
-        <template #node-start="{ node }">
-          <StartNode 
-            :id="node?.id"
-            :data="node?.data" 
-            :selected="node?.selected"
-            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
-          />
-        </template>
-        
-        <template #node-end="{ node }">
-          <EndNode 
-            :id="node?.id"
-            :data="node?.data" 
-            :selected="node?.selected"
-            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
-          />
-        </template>
-        
-        <template #node-userTask="{ node }">
-          <NormalNode 
-            :id="node?.id"
-            :data="node?.data" 
-            :selected="node?.selected"
-            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
-          />
-        </template>
-        
-        <template #node-systemTask="{ node }">
-          <NormalNode 
-            :id="node?.id"
-            :data="node?.data" 
-            :selected="node?.selected"
-            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
-          />
-        </template>
-        
-        <template #node-decision="{ node }">
-          <DecisionNode 
-            :id="node?.id"
-            :data="node?.data" 
-            :selected="node?.selected"
-            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
-          />
-        </template>
-        
-      </VueFlow>
+      <!-- LogicFlow 容器 -->
+      <div ref="containerRef" class="logic-flow-container"></div>
+      
+      <!-- 侧边栏 -->
+      <Sidebar 
+        @node-click="handleSidebarNodeClick"
+      />
+      
+      <!-- 操作按钮 -->
+      <div class="flow-controls">
+        <el-button type="danger" @click="handleClearAll">清空画布</el-button>
+      </div>
     </div>
-    
-    <!-- 右键菜单 -->
-    <ContextMenu
-      :visible="contextMenu.visible"
-      :position="contextMenu.position"
-      @edit="handleContextMenuEdit"
-      @copy="handleContextMenuCopy"
-      @delete="handleContextMenuDelete"
-      @close="handleContextMenuClose"
-    />
     
     <!-- 编辑对话框 -->
     <EditDialog
@@ -627,43 +504,67 @@ defineExpose({
   overflow: hidden;
 }
 
-.vue-flow {
+.logic-flow-container {
   width: 100%;
   height: 100%;
   background: #f8fafc;
 }
 
-// 全局样式覆盖
-:deep(.vue-flow__node) {
+.flow-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+// LogicFlow 全局样式覆盖
+:deep(.lf-node) {
   cursor: pointer;
 }
 
-:deep(.vue-flow__node.selected) {
+:deep(.lf-node.selected) {
   outline: 2px dashed var(--el-color-primary-light-3);
   outline-offset: 3px;
 }
 
-:deep(.vue-flow__node.selected:has(.decision-node)) {
-  outline: 2px dashed var(--el-color-primary-light-3);
-  outline-offset: 20px;
-}
-
-
-:deep(.vue-flow__handle) {
-  background: var(--el-color-primary);
-  border: 2px solid white;
-  width: 8px;
-  height: 8px;
-}
-
-:deep(.vue-flow__edge-path) {
+:deep(.lf-edge) {
   stroke: var(--el-color-primary) !important;
   stroke-width: 2 !important;
 }
 
-:deep(.vue-flow__edge.selected .vue-flow__edge-path) {
+:deep(.lf-edge.selected) {
   stroke: var(--el-color-primary);
   stroke-width: 3;
 }
 
+// 右键菜单样式
+:deep(.lf-menu) {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+}
+
+:deep(.lf-menu-item) {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+:deep(.lf-menu-delete) {
+  color: #ef4444;
+}
+
+:deep(.lf-menu-edit) {
+  color: var(--el-color-primary);
+}
+
+:deep(.lf-menu-copy) {
+  color: #6b7280;
+}
 </style>

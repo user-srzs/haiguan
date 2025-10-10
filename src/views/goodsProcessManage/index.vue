@@ -1,6 +1,6 @@
 <script setup lang="ts" name="addressManage">
 import { Plus } from "@element-plus/icons-vue";
-import type { Node, Edge } from "@vue-flow/core";
+// 移除 Vue Flow 相关的类型导入，因为现在使用 LogicFlow
 import type { FormInstance, FormRules } from 'element-plus';
 import type {
   AddProcessGoodsType,
@@ -299,10 +299,10 @@ const params = ref({
 })
 
 // 节点
-const nodes = ref<Node[]>([])
+const nodes = ref<any[]>([])
 
 // 连接线
-const edges = ref<Edge[]>([]);
+const edges = ref<any[]>([]);
 
 // 获取流程
 const getFlow = async (where = {}) => {

@@ -2,9 +2,7 @@
   <div class="flow-toolbar">
     <div class="toolbar-content">
       <div 
-        class="node-item draggable" 
-        draggable="true"
-        @dragstart="(event) => onDragStart('start', event)"
+        class="node-item" 
         @click="onNodeClick('start')"
       >
         <div class="node-icon start-icon"></div>
@@ -12,9 +10,7 @@
       </div>
       
       <div 
-        class="node-item draggable" 
-        draggable="true"
-        @dragstart="(event) => onDragStart('userTask', event)"
+        class="node-item" 
         @click="onNodeClick('userTask')"
       >
         <div class="node-icon user-task-icon">
@@ -23,9 +19,7 @@
       </div>
       
       <div 
-        class="node-item draggable" 
-        draggable="true"
-        @dragstart="(event) => onDragStart('decision', event)"
+        class="node-item" 
         @click="onNodeClick('decision')"
       >
         <div class="node-icon decision-icon"></div>
@@ -33,15 +27,21 @@
       </div>
       
       <div 
-        class="node-item draggable" 
-        draggable="true"
-        @dragstart="(event) => onDragStart('end', event)"
+        class="node-item" 
         @click="onNodeClick('end')"
       >
         <div class="node-icon end-icon">
           <div class="outer-circle"></div>
         </div>
         <span class="node-label">结束</span>
+      </div>
+      
+      <div 
+        class="node-item" 
+        @click="onNodeClick('selection')"
+      >
+        <div class="node-icon selection-icon">⊡</div>
+        <span class="node-label">选区</span>
       </div>
     </div>
   </div>
@@ -50,24 +50,12 @@
 <script setup lang="ts">
 interface Emits {
   (e: 'nodeClick', type: string): void
-  (e: 'dragStart', type: string, event: DragEvent): void
 }
 
 const emit = defineEmits<Emits>()
 
 const onNodeClick = (type: string) => {
   emit('nodeClick', type)
-}
-
-const onDragStart = (type: string, event: DragEvent) => {
-  console.log('开始拖拽:', type)
-  if (event.dataTransfer) {
-    // 使用简单的字符串格式
-    event.dataTransfer.setData('application/vueflow', type)
-    event.dataTransfer.effectAllowed = 'copy'
-    console.log('设置拖拽数据:', type)
-  }
-  emit('dragStart', type, event)
 }
 </script>
 
@@ -114,13 +102,6 @@ const onDragStart = (type: string, event: DragEvent) => {
       background: rgba(59, 130, 246, 0.15);
     }
 
-    &.draggable {
-      cursor: grab;
-
-      &:active {
-        cursor: grabbing;
-      }
-    }
 
     .node-icon {
       width: 24px;
