@@ -4,8 +4,11 @@ import '@logicflow/core/lib/style/index.css'
 import { DndPanel, SelectionSelect, Menu } from '@logicflow/extension'
 import '@logicflow/extension/lib/style/index.css'
 import { ElMessage } from 'element-plus'
+import decisionNodeIcon from "@/assets/flow/decisionNode.svg";
+import endNodeIcon from "@/assets/flow/end.svg";
+import normalNodeIcon from "@/assets/flow/normalNode.svg";
+import startNodeIcon from "@/assets/flow/start.svg";
 // 导入自定义组件
-import EditDialog from './components/EditDialog.vue'
 
 // 禁用属性继承，手动控制属性传递
 defineOptions({
@@ -62,7 +65,7 @@ const initLogicFlow = () => {
   // 使用扩展插件
   LogicFlow.use(DndPanel)
   LogicFlow.use(SelectionSelect)
-  LogicFlow.use(Menu)
+  // LogicFlow.use(Menu)
 
   lf = new LogicFlow({
     container: containerRef.value,
@@ -120,26 +123,60 @@ const initLogicFlow = () => {
       type: 'circle',
       text: '开始',
       label: '开始节点',
-      icon: 'Notification',
+      icon: startNodeIcon,
     },
     {
       type: 'rect',
-      label: '用户任务',
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==',
+      label: '普通节点',
+      icon: normalNodeIcon,
       className: 'important-node'
     },
     {
       type: 'diamond',
       label: '条件判断',
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAVCAYAAAHeEJUAAAAABGdBTUEAALGPC/xhBQAAAvVJREFUOBGNVEFrE0EU/mY3bQoiFlOkaUJrQUQoWMGePLX24EH0IIoHKQiCV0G8iE1covgLiqA/QTzVm1JPogc9tIJYFaQtlhQxqYjSpunu+L7JvmUTU3AgmTfvffPNN++9WSA1DO182f6xwILzD5btfAoQmwL5KJEwiQyVbSVZ0IgRyV6PTpIJ81E5ZvqfHQR0HUOBHW4L5Et2kQ6Zf7iAOhTFAA8s0pEP7AXO1uAA52SbqGk6h/6J45LaLhO64ByfcUzM39V7ZiAdS2yCePPEIQYvTUHqM/n7dgQNfBKWPjpF4ISk8q3J4nB11qw6X8l+FsF3EhlkEMfrjIer3wJTLwS2aCNcj4DbGxXTw00JmAuO+Ni6bBxVUCvS5d9aa04+so4pHW5jLTywuXAL7jJ+D06sl82Sgl2JuVBQn498zkc2bGKxULHjCnSMadBKYDYYHAtsby1EQ5lNGrQd4Y3v4Zo0XdGEmDno46yCM9Tk+RiJmUYHS/aXHPNTcjxcbTFna000PFJHIVZ5lFRqRpJWk9/+QtlOUYJj9HG5pVFEU7zqIYDVsw2s+AJaD8wTd2umgSCCyUxgGsS1Y6TBwXQQTFuZaHcd8gAGioE90hlsY+wMcs30RduYtxanjMGal8H5dMW67dmT1JFtYUEe8LiQLRsPZ6IIc7A4J5tqco3T0pnv/4u0kyzrYUq7gASuEyI8VXKvB9Odytv6jS/PNaZBln0nioJG/AVQRZvApOdhjj3Jt8QC8Im09SafwdBdvIpztpxWxpeKCC+EsFdS8DCyuCn2munFpL7ctHKp+Xc5cMybeIyMAN33SPL3ZR9QV1XVwLyzHm6Iv0/yeUuUb7PPlZC4D4HZkeu6dpF4v9j9MreGtMbxMMRLIcjJic9yHi7WQ3yVKzZVWUr5UrViJvn1FfUlwe/KYVfYyWRLSGNu16hR01U9IacajXPei0wx/5BqgInvJN+MMNtNme7ReU9SBbgntovn0kKHpFg7UogZvaZiOue/q1SBo9ktHzQAAAAASUVORK5CYII=',
+      icon: decisionNodeIcon,
     },
     {
       type: 'circle',
       text: '结束',
       label: '结束节点',
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAA1BJREFUOBFtVE1IVUEYPXOf+tq40Y3vPcmFIdSjIorWoRG0ERWUgnb5FwVhYQSl72oUoZAboxKNFtWiwKRN0M+jpfSzqJAQclHo001tKkjl3emc8V69igP3znzfnO/M9zcDcKT67azmjYWTwl9Vn7Vumeqzj1DVb6cleQY4oAVnIOPb+mKAGxQmKI5CWNJ2aLPatxWa3aB9K7/fB+/Z0jUF6TmMlFLQqrkECWQzOZxYGjTlOl8eeKaIY5yHnFn486xBustDjWT6dG7pmjHOJd+33t0iitTPkK6tEvjxq4h2MozQ6WFSX/LkDUGfFwfhEZj1Auz/U4pyAi5Sznd7uKzznXeVHlI/Aywmk6j7fsUsEuCGADrWARXXwjxWQsUbIupDHJI7kF5dRktg0eN81IbiZXiTESic50iwS+t1oJgL83jAiBupLDCQqwziaWSoAFSeIR3P5Xv5az00wyIn35QRYTwdSYbz8pH8fxUUAtxnFvYmEmgI0wYXUXcCCspeEVpXlsRhBnCEATxWylL9+EKCAYhe1NGstUa6356kS9NVvt3DU2fd+Wtbm/+lSbylJqsqkSm9CRhvoJVlvKPvF1RKY/FcPn5j4UfIMLn8D4UYb54BNsilTDXKnF4CfTobA0FpoW/LSp306wkXM+XaOJhZaFkcNM82ASNAWMrhrUbRfmyeI1FvRBTpN06WKxa9BK0o2E4Pd3zfBBEwPsv9sQBnmLVbLEIZ/Xe9LYwJu/Er17W6HYVBc7vmuk0xUQ+pqxdom5Fnp55SiytXLPYoMXNM4u4SNSCFWnrVIzKG3EGyMXo6n/BQOe+bX3FClY4PwydVhthOZ9NnS+ntiLh0fxtlUJHAuGaFoVmttpVMeum0p3WEXbcll94l1wM/gZ0Ccczop77VvN2I7TlsZCsuXf1WHvWEhjO8DPtyOVg2/mvK9QqboEth+7pD6NUQC1HN/TwvydGBARi9MZSzLE4b8Ru3XhX2PBxf8E1er2A6516o0w4sIA+lwURhAON82Kwe2iDAC1Watq4XHaGQ7skLcFOtI5lDxuM2gZe6WFIotPAhbaeYlU4to5cuarF1QrcZ/lwrLaCJl66JBocYZnrNlvm2+MBCTmUymPrYZVbjdlr/BxlMjmNmNI3SAAAAAElFTkSuQmCC',
+      icon: endNodeIcon,
     }
   ])
+  }
+  // 设置右键菜单
+  if (lf?.extension?.menu) {
+    (lf.extension.menu as any).setMenuConfig({
+      nodeMenu: [
+        {
+          className: 'lf-menu-delete',
+          text: '删除',
+          icon: true,
+          callback: (node: any) => {
+            lf?.deleteNode(node.id);
+            ElMessage.success('节点已删除')
+          }
+        },
+        {
+          className: 'lf-menu-edit',
+          text: '编辑',
+          icon: true,
+          callback: (node: any) => {
+            lf?.editText(node.id)
+          }
+        },
+        {
+          className: 'lf-menu-copy',
+          text: '复制',
+          icon: true,
+          callback: (node: any) => {
+            lf?.cloneNode(node.id)
+          }
+        }
+      ],
+      edgeMenu: false,
+      graphMenu: [],
+  })
   }
   // 绑定事件
   if (lf) {
@@ -217,13 +254,6 @@ watch([nodes, edges], ([newNodes, newEdges]) => {
   emit('edges-change', newEdges)
 }, { deep: true })
 
-// 编辑对话框状态
-const editDialog = reactive({
-  visible: false,
-  nodeId: '',
-  nodeLabel: ''
-})
-
 // 节点ID计数器
 let nodeIdCounter = 5
 
@@ -277,33 +307,6 @@ const createNode = (type: string, position: { x: number, y: number }) => {
   }
   
   return newNode
-}
-
-// 处理侧边栏节点点击
-const handleSidebarNodeClick = (type: string) => {
-  if (type === 'selection') {
-    // 选择工具逻辑
-    (lf?.extension.selectionSelect as any).openSelectionSelect()
-    return
-  }
-  
-  // 在画布中心创建节点
-  const position = { x: 300, y: 200 }
-  console.log('点击创建节点:', type, position)
-  createNode(type, position)
-}
-
-// 处理编辑确认
-const handleEditConfirm = (label: string) => {
-  const node = nodes.value.find(n => n.id === editDialog.nodeId)
-  if (node) {
-    node.text = label
-    // 同步到 LogicFlow
-    if (lf) {
-      lf.setProperties(node.id, { text: label })
-    }
-    ElMessage.success('节点文本已更新')
-  }
 }
 
 // 处理清空画布
@@ -397,13 +400,6 @@ defineExpose({
         <el-button type="danger" @click="handleClearAll">清空画布</el-button>
       </div>
     </div>
-    
-    <!-- 编辑对话框 -->
-    <EditDialog
-      v-model="editDialog.visible"
-      :node-label="editDialog.nodeLabel"
-      @confirm="handleEditConfirm"
-    />
   </div>
 </template>
 
