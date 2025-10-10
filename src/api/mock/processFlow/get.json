@@ -1,0 +1,77 @@
+{
+  "code": 1,
+  "nodesList": [
+    {
+      "id": 14,
+      "arrivalOrDeparture": "arrival",
+      "processGoodsTypeId": 1,
+      "nodeName": "开始对对对",
+      "nodeType": "circle",
+      "x": "509",
+      "y": "54",
+      "createTime": 1760077246000,
+      "projectCode": "hckjProject",
+      "visualizationRegionId": null,
+      "visualizationRegionName": ""
+    },
+    {
+      "id": 18,
+      "arrivalOrDeparture": "arrival",
+      "processGoodsTypeId": 1,
+      "nodeName": "text1",
+      "nodeType": "rect",
+      "x": "397",
+      "y": "354",
+      "createTime": 1760085044000,
+      "projectCode": "hckjProject",
+      "visualizationRegionId": null,
+      "visualizationRegionName": ""
+    },
+    {
+      "id": 20,
+      "arrivalOrDeparture": "arrival",
+      "processGoodsTypeId": 1,
+      "nodeName": "text",
+      "nodeType": "diamond",
+      "x": "730",
+      "y": "325",
+      "createTime": 1760085096000,
+      "projectCode": "hckjProject",
+      "visualizationRegionId": null,
+      "visualizationRegionName": ""
+    }
+  ],
+  "success": "success",
+  "lineList": [
+    {
+      "id": 9,
+      "arrivalOrDeparture": "arrival",
+      "processGoodsTypeId": 1,
+      "sourceNodeId": 14,
+      "targetNodeId": 18,
+      "lineName": "",
+      "condition": "",
+      "createTime": 1760085062000
+    },
+    {
+      "id": 11,
+      "arrivalOrDeparture": "arrival",
+      "processGoodsTypeId": 1,
+      "sourceNodeId": 14,
+      "targetNodeId": 20,
+      "lineName": "",
+      "condition": "",
+      "createTime": 1760085105000
+    },
+    {
+      "id": 12,
+      "arrivalOrDeparture": "arrival",
+      "processGoodsTypeId": 1,
+      "sourceNodeId": 18,
+      "targetNodeId": 20,
+      "lineName": "",
+      "condition": "",
+      "createTime": 1760085136000
+    }
+  ]
+}

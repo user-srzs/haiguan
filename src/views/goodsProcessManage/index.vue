@@ -32,12 +32,14 @@ const terminalTree = <T extends Record<string, any>>(list: T[]): Tree<T>[] => {
   return list.map((item) => {
     return {
       id: item.id,
+      key: `${TreeType.terminal}-${item.id}`,
       label: item.terminalName,
       value: item.terminal,
       type: TreeType.terminal,
       original: item,
       children: item.processGoodsTypeList?.map((obj: ProcessGoodsType) => ({
         id: obj.id,
+        key: `${TreeType.goodsType}-${obj.id}`,
         label: obj.goodsTypeName,
         value: obj.goodsType,
         type: TreeType.goodsType,
@@ -57,12 +59,14 @@ const activeProcessTerminal = ref<Tree<ProcessTerminal> | null>(null);
 // 点击节点
 const handleNodeClick = async (node: Tree<ProcessTerminal>) => {
   console.log('node', node);
-  activeProcessTerminal.value = null;
-  if (node.type === 'terminal' && !node.children?.length) return;
-  if (node.type === 'terminal') {
-    activeProcessTerminal.value = node.children?.[0] || null;
+  if(node.type === 'terminal') {
+    if(!node?.children?.length) {
+      activeProcessTerminal.value = null;
+    }else {
+      activeProcessTerminal.value = { ...node.children[0] };
+    }
   }else {
-    activeProcessTerminal.value = node;
+    activeProcessTerminal.value = { ...node };
   }
 }
 
@@ -296,7 +300,15 @@ const flowRef = ref<InstanceType<typeof CustomFlow>>();
 /** 初始化挂载完之后执行 */
 onMounted(async () => {
   await getTerminal();
-  activeProcessTerminal.value = !!processTerminalList.value?.length ? processTerminalList.value[0] : null;
+  if(!processTerminalList.value?.length) {
+    activeProcessTerminal.value = null;
+  }else {
+    await handleNodeClick(processTerminalList.value[0])
+    // if(processTerminalList.value[0].type === 'terminal') {
+    //   activeProcessTerminal.value =
+    // }
+  }
+  // activeProcessTerminal.value = !!processTerminalList.value?.length ? processTerminalList.value[0] : null;
 })
 </script>
 
@@ -318,7 +330,7 @@ onMounted(async () => {
           <el-tree
             :data="processTerminalList"
             icon-class="none"
-            node-key="value"
+            node-key="key"
             :default-expand-all="true"
             :expand-on-click-node="false"
             :current-node-key="activeProcessTerminal?.value"

@@ -1,0 +1,35 @@
+{
+  "code": 1,
+  "success": "success",
+  "list": [
+    {
+      "id": 1,
+      "terminal": "T1",
+      "terminalName": "T1航站楼",
+      "projectCode": "hckjProject",
+      "processGoodsTypeList": [
+        {
+          "id": 1,
+          "processTerminalId": 1,
+          "goodsType": "123",
+          "goodsTypeName": "国际普货",
+          "projectCode": "hckjProject"
+        },
+        {
+          "id": 4,
+          "processTerminalId": 1,
+          "goodsType": "ces",
+          "goodsTypeName": "测试1",
+          "projectCode": "hckjProject"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "terminal": "Ts",
+      "terminalName": "测试",
+      "projectCode": "hckjProject",
+      "processGoodsTypeList": null
+    }
+  ]
+}
