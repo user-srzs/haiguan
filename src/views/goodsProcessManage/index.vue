@@ -1,6 +1,5 @@
 <script setup lang="ts" name="addressManage">
 import { Plus } from "@element-plus/icons-vue";
-// 移除 Vue Flow 相关的类型导入，因为现在使用 LogicFlow
 import type { FormInstance, FormRules } from 'element-plus';
 import type {
   AddProcessGoodsType,
@@ -18,15 +17,11 @@ import {
   updateProcessTerminal
 } from '@/api/processTerminal';
 import { formAssignObject, isNullOrDef } from '@/utils';
-import { 
-  getProcessFlow
-} from '@/api/processFlow';
-import { FlowNodeResult } from '@/api/processFlow/model.ts';
-import CustomFlow from '@/components/custom-flow/index.vue';
+import CustomFlow from './components/custom-flow/index.vue';
 // 获取节点列表(航站楼、货物类型)
 const getTerminal = async () => {
   const res = await getProcessTerminal();
-  const  { code, list } = (res as any).data as ProcessTerminalResult;
+  const  { code, list } = res as ProcessTerminalResult;
   if(code !== 1) return;
   processTerminalList.value = terminalTree<ProcessTerminal>(list);
 }
@@ -69,7 +64,6 @@ const handleNodeClick = async (node: Tree<ProcessTerminal>) => {
   }else {
     activeProcessTerminal.value = node;
   }
-  await getFlow(params.value);
 }
 
 // 左侧header, 添加节点
@@ -287,7 +281,6 @@ const activeTab = ref<string>(tabList[0].name);
 // 切换tab
 const changeTab = async (item: TabItem) => {
   activeTab.value = item.name;
-  await getFlow(params.value);
 };
 
 const computedParamsNodes = computed(() => {
@@ -297,51 +290,11 @@ const computedParamsNodes = computed(() => {
   }
 })
 
-const params = ref({
-  ...computedParamsNodes,
-})
-
-// 节点
-const nodes = ref<any[]>([])
-
-// 连接线
-const edges = ref<any[]>([]);
-
-// 获取流程
-const getFlow = async (where = {}) => {
-  const res = await getProcessFlow(where);
-  const { code, nodesList, lineList } = (res as any).data as FlowNodeResult;
-  if(code !== 1) return;
-  nodes.value = nodesList?.map(item => {
-    return {
-      ...item,
-      label: item.nodeName,
-      type: item.nodeType,
-      position: {
-        x: Number(item.x),
-        y: Number(item.y)
-      },
-      data: {
-        label: item.nodeName,
-        ...item
-      }
-    }
-  }) ?? [];
-  edges.value = lineList?.map(item => {
-    return {
-      ...item,
-      source: item.sourceNodeId,
-      target: item.targetNodeId
-    }
-  }) ?? [];
-};
-
 
 /** 初始化挂载完之后执行 */
 onMounted(async () => {
   await getTerminal();
   activeProcessTerminal.value = !!processTerminalList.value?.length ? processTerminalList.value[0] : null;
-  await getFlow(params.value)
 })
 </script>
 
@@ -404,15 +357,9 @@ onMounted(async () => {
       </template>
       <template #default>
       <!-- 流程图 -->
-        <CustomFlow 
-          :model-value="{ nodes, edges }"
-          :arrival-or-departure="activeTab"
-          :process-goods-type-id="activeProcessTerminal?.id || 0"
-          :enable-auto-sync="true"
-          @node-edit="handleNodeEdit"
-          @edge-edit="handleEdgeEdit"
-          @node-drag-stop="handleNodeDragStop"
-          @connect="handleConnect"
+        <CustomFlow
+          ref="flowRef"
+          :activeNode="computedParamsNodes"
         ></CustomFlow>
       </template>
     </el-card>
