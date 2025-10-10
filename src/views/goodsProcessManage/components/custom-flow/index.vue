@@ -388,6 +388,7 @@ const initLogicFlow = () => {
           ElMessage.error(msg || '操作失败');
           return;
         }
+        await getFlow();
       }catch (error) {
         ElMessage.error('操作失败');
         console.error('error', error);
@@ -410,6 +411,7 @@ const initLogicFlow = () => {
           ElMessage.error(msg || '操作失败');
           return;
         }
+        await getFlow();
       }catch (error) {
         ElMessage.error('操作失败');
         console.error('error', error);
@@ -430,6 +432,7 @@ const initLogicFlow = () => {
           ElMessage.error(msg || '操作失败');
           return;
         }
+        await getFlow();
       }catch (error) {
         ElMessage.error('操作失败');
         console.error('error', error);
@@ -447,6 +450,7 @@ const initLogicFlow = () => {
         }
         const res = await createEdge(edgeData);
         console.log('res0000000000000000', res);
+        await getFlow();
       } catch (error) {
         ElMessage.error('操作失败');
         console.error('error', error);
@@ -470,6 +474,7 @@ const initLogicFlow = () => {
           ElMessage.error(msg || '操作失败');
           return;
         }
+        await getFlow();
       }catch (error) {
         ElMessage.error('操作失败');
         console.error('error', error);
@@ -502,6 +507,7 @@ const initLogicFlow = () => {
               ElMessage.error(msg || '操作失败');
               return;
             }
+            await getFlow();
           }catch (error) {
             ElMessage.error('操作失败');
             console.error('error', error);
@@ -527,6 +533,7 @@ const initLogicFlow = () => {
               ElMessage.error(msg || '操作失败');
               return;
             }
+            await getFlow();
           }catch (error) {
             ElMessage.error('操作失败');
             console.error('error', error);
