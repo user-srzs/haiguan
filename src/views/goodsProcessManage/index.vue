@@ -9,6 +9,7 @@ import type {
   SelectItem,
   TabItem, Tree
 } from '@/api/processTerminal/model.ts';
+import { TreeType } from '@/api/processTerminal/model.ts';
 import {
   createProcessGoodsType,
   createProcessTerminal,
@@ -17,13 +18,15 @@ import {
   updateProcessTerminal
 } from '@/api/processTerminal';
 import { formAssignObject, isNullOrDef } from '@/utils';
-import { createProcessFlowNode, getProcessFlow } from '@/api/processFlow';
+import { 
+  getProcessFlow
+} from '@/api/processFlow';
 import { FlowNodeResult } from '@/api/processFlow/model.ts';
 import CustomFlow from '@/components/custom-flow/index.vue';
 // 获取节点列表(航站楼、货物类型)
 const getTerminal = async () => {
   const res = await getProcessTerminal();
-  const  { code, list } = res as ProcessTerminalResult;
+  const  { code, list } = (res as any).data as ProcessTerminalResult;
   if(code !== 1) return;
   processTerminalList.value = terminalTree<ProcessTerminal>(list);
 }
@@ -36,13 +39,13 @@ const terminalTree = <T extends Record<string, any>>(list: T[]): Tree<T>[] => {
       id: item.id,
       label: item.terminalName,
       value: item.terminal,
-      type: 'terminal',
+      type: TreeType.terminal,
       original: item,
       children: item.processGoodsTypeList?.map((obj: ProcessGoodsType) => ({
         id: obj.id,
         label: obj.goodsTypeName,
         value: obj.goodsType,
-        type: 'goodsType',
+        type: TreeType.goodsType,
         original: obj,
         children: null
       }))
@@ -307,7 +310,7 @@ const edges = ref<any[]>([]);
 // 获取流程
 const getFlow = async (where = {}) => {
   const res = await getProcessFlow(where);
-  const { code, nodesList, lineList } = res as FlowNodeResult;
+  const { code, nodesList, lineList } = (res as any).data as FlowNodeResult;
   if(code !== 1) return;
   nodes.value = nodesList?.map(item => {
     return {
@@ -333,36 +336,6 @@ const getFlow = async (where = {}) => {
   }) ?? [];
 };
 
-//
-const activeFlow = ref({
-  arrivalOrDeparture: activeTab.value,
-  processGoodsTypeId: activeProcessTerminal.value?.id,
-  nodeName: "T1停机坪",
-  nodeType: "1",
-  x: "123",
-  y: "456",
-  visualizationRegionId: "",
-  visualizationRegionName: ""
-});
-
-// 创建流程节点
-const createFlowNode = async () => {
-  const formData = {
-    arrivalOrDeparture: '',
-    processGoodsTypeId: 0,
-    nodeName: '',
-    nodeType: '',
-    x: 0,
-    y: 0,
-    visualizationRegionId: '',
-    visualizationRegionName: ''
-  }
-  formAssignObject(formData, activeFlow.value);
-  formData.processGoodsTypeId = Number(formData.processGoodsTypeId) || 0;
-  const res = await createProcessFlowNode(formData);
-  console.log('res', res);
-  await getFlow(params.value)
-}
 
 /** 初始化挂载完之后执行 */
 onMounted(async () => {
@@ -431,7 +404,16 @@ onMounted(async () => {
       </template>
       <template #default>
       <!-- 流程图 -->
-        <CustomFlow :model-value="{ nodes, edges }"></CustomFlow>
+        <CustomFlow 
+          :model-value="{ nodes, edges }"
+          :arrival-or-departure="activeTab"
+          :process-goods-type-id="activeProcessTerminal?.id || 0"
+          :enable-auto-sync="true"
+          @node-edit="handleNodeEdit"
+          @edge-edit="handleEdgeEdit"
+          @node-drag-stop="handleNodeDragStop"
+          @connect="handleConnect"
+        ></CustomFlow>
       </template>
     </el-card>
   </div>

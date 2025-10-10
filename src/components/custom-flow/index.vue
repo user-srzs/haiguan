@@ -8,6 +8,14 @@ import decisionNodeIcon from "@/assets/flow/decisionNode.svg";
 import endNodeIcon from "@/assets/flow/end.svg";
 import normalNodeIcon from "@/assets/flow/normalNode.svg";
 import startNodeIcon from "@/assets/flow/start.svg";
+import { 
+  createProcessFlowNode,
+  updateProcessFlowNode,
+  removeProcessFlowNode,
+  createProcessFlowLine,
+  updateProcessFlowLine,
+  removeProcessFlowLine
+} from '@/api/processFlow';
 // 导入自定义组件
 
 // 禁用属性继承，手动控制属性传递
@@ -21,10 +29,18 @@ interface Props {
     nodes: any[]
     edges: any[]
   }
+  // 后端API相关参数
+  arrivalOrDeparture?: string
+  processGoodsTypeId?: number
+  // 是否启用自动同步到后端
+  enableAutoSync?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: () => ({ nodes: [], edges: [] })
+  modelValue: () => ({ nodes: [], edges: [] }),
+  arrivalOrDeparture: '',
+  processGoodsTypeId: 0,
+  enableAutoSync: true
 })
 
 // 定义事件
@@ -47,6 +63,11 @@ const emit = defineEmits<{
   'zoom-change': [event: any]
   'init': [event: any]
   'error': [event: any]
+  // 自定义事件
+  'node-delete': [event: { nodeId: string }]
+  'edge-delete': [event: { edgeId: string }]
+  'node-edit': [event: { node: any }]
+  'edge-edit': [event: { edge: any }]
 }>()
 
 // LogicFlow 实例
@@ -55,8 +76,108 @@ const containerRef = ref<HTMLElement>()
 
 // 节点和边的数据
 const nodes = ref([])
-
 const edges = ref([])
+
+// 后端API同步函数
+const syncNodeToBackend = async (nodeData: any, operation: 'create' | 'update' | 'delete') => {
+  if (!props.enableAutoSync) return
+  
+  try {
+    const formData = {
+      id: nodeData.id,
+      arrivalOrDeparture: props.arrivalOrDeparture,
+      processGoodsTypeId: props.processGoodsTypeId,
+      nodeName: nodeData.nodeName || nodeData.text || '',
+      nodeType: nodeData.nodeType || getNodeTypeByShape(nodeData.type),
+      x: nodeData.x?.toString() || '0',
+      y: nodeData.y?.toString() || '0',
+      visualizationRegionId: nodeData.visualizationRegionId || '',
+      visualizationRegionName: nodeData.visualizationRegionName || ''
+    }
+
+    let res
+    switch (operation) {
+      case 'create':
+        res = await createProcessFlowNode(formData)
+        break
+      case 'update':
+        res = await updateProcessFlowNode(formData)
+        break
+      case 'delete':
+        res = await removeProcessFlowNode(nodeData.id)
+        break
+    }
+    
+    const { code, msg = '' } = res as any
+    if (code !== 1) {
+      ElMessage.error(msg || `${operation}节点失败`)
+      return false
+    }
+    
+    ElMessage.success(`${operation === 'create' ? '创建' : operation === 'update' ? '更新' : '删除'}节点成功`)
+    return true
+  } catch (error) {
+    console.error(`${operation}节点失败:`, error)
+    ElMessage.error(`${operation}节点失败`)
+    return false
+  }
+}
+
+const syncEdgeToBackend = async (edgeData: any, operation: 'create' | 'update' | 'delete') => {
+  if (!props.enableAutoSync) return
+  
+  try {
+    const formData = {
+      id: edgeData.id,
+      arrivalOrDeparture: props.arrivalOrDeparture,
+      processGoodsTypeId: props.processGoodsTypeId?.toString() || '0',
+      sourceNodeId: edgeData.sourceNodeId,
+      targetNodeId: edgeData.targetNodeId,
+      lineName: edgeData.lineName || edgeData.text || '连线',
+      condition: edgeData.condition || 0
+    }
+
+    let res
+    switch (operation) {
+      case 'create':
+        res = await createProcessFlowLine(formData)
+        break
+      case 'update':
+        res = await updateProcessFlowLine(formData)
+        break
+      case 'delete':
+        res = await removeProcessFlowLine(edgeData.id)
+        break
+    }
+    
+    const { code, msg = '' } = res as any
+    if (code !== 1) {
+      ElMessage.error(msg || `${operation}连线失败`)
+      return false
+    }
+    
+    ElMessage.success(`${operation === 'create' ? '创建' : operation === 'update' ? '更新' : '删除'}连线成功`)
+    return true
+  } catch (error) {
+    console.error(`${operation}连线失败:`, error)
+    ElMessage.error(`${operation}连线失败`)
+    return false
+  }
+}
+
+// 根据节点形状获取节点类型
+const getNodeTypeByShape = (type: string) => {
+  switch (type) {
+    case 'circle':
+      return '1' // 开始节点
+    case 'rect':
+      return '2' // 普通节点
+    case 'diamond':
+      return '3' // 判断节点
+    default:
+      return '2'
+  }
+}
 
 // 初始化 LogicFlow
 const initLogicFlow = () => {
@@ -124,25 +245,57 @@ const initLogicFlow = () => {
       text: '开始',
       label: '开始节点',
       icon: startNodeIcon,
+      callback: async (node: any) => {
+        const nodeData = {
+          ...node,
+          nodeName: node.text || '开始节点',
+          nodeType: '1'
+        }
+        await syncNodeToBackend(nodeData, 'create')
+      }
     },
     {
       type: 'rect',
       text: 'text',
       label: '普通节点',
       icon: normalNodeIcon,
-      className: 'important-node'
+      className: 'important-node',
+      callback: async (node: any) => {
+        const nodeData = {
+          ...node,
+          nodeName: node.text || '普通节点',
+          nodeType: '2'
+        }
+        await syncNodeToBackend(nodeData, 'create')
+      }
     },
     {
       type: 'diamond',
       text: 'text',
       label: '条件判断',
       icon: decisionNodeIcon,
+      callback: async (node: any) => {
+        const nodeData = {
+          ...node,
+          nodeName: node.text || '条件判断',
+          nodeType: '3'
+        }
+        await syncNodeToBackend(nodeData, 'create')
+      }
     },
     {
       type: 'circle',
       text: '结束',
       label: '结束节点',
       icon: endNodeIcon,
+      callback: async (node: any) => {
+        const nodeData = {
+          ...node,
+          nodeName: node.text || '结束节点',
+          nodeType: '4'
+        }
+        await syncNodeToBackend(nodeData, 'create')
+      }
     }
   ])
   }
@@ -154,9 +307,11 @@ const initLogicFlow = () => {
           className: 'lf-menu-delete',
           text: '删除',
           icon: true,
-          callback: (node: any) => {
-            lf?.deleteNode(node.id);
-            ElMessage.success('节点已删除')
+          callback: async (node: any) => {
+            const success = await syncNodeToBackend(node, 'delete')
+            if (success) {
+              lf?.deleteNode(node.id)
+            }
           }
         },
         {
@@ -171,12 +326,43 @@ const initLogicFlow = () => {
           className: 'lf-menu-copy',
           text: '复制',
           icon: true,
-          callback: (node: any) => {
-            lf?.cloneNode(node.id)
+          callback: async (node: any) => {
+            const clonedNode = lf?.cloneNode(node.id)
+            if (clonedNode) {
+              // 为复制的节点生成新的ID和位置
+              const newNodeData = {
+                ...clonedNode,
+                id: `node_${Date.now()}`,
+                x: (node.x || 0) + 50,
+                y: (node.y || 0) + 50,
+                nodeName: `${node.nodeName || node.text || '节点'}_副本`
+              }
+              await syncNodeToBackend(newNodeData, 'create')
+            }
           }
         }
       ],
-      edgeMenu: false,
+      edgeMenu: [
+        {
+          className: 'lf-menu-delete',
+          text: '删除',
+          icon: true,
+          callback: async (edge: any) => {
+            const success = await syncEdgeToBackend(edge, 'delete')
+            if (success) {
+              lf?.deleteEdge(edge.id)
+            }
+          }
+        },
+        {
+          className: 'lf-menu-edit',
+          text: '编辑',
+          icon: true,
+          callback: (edge: any) => {
+            lf?.editText(edge.id)
+          }
+        }
+      ],
       graphMenu: [],
   })
   }
@@ -194,7 +380,9 @@ const initLogicFlow = () => {
       emit('node-drag', data)
     })
 
-    lf.on('node:drag-stop', (data) => {
+    lf.on('node:drag-stop', async (data) => {
+      // 同步节点位置到后端
+      await syncNodeToBackend(data.node, 'update')
       emit('node-drag-stop', data)
     })
 
@@ -210,7 +398,9 @@ const initLogicFlow = () => {
       ElMessage.warning('连接不允许')
     })
 
-    lf.on('connection:created', (data) => {
+    lf.on('connection:created', async (data) => {
+      // 同步连线创建到后端
+      await syncEdgeToBackend(data.edge, 'create')
       emit('connect', data)
     })
 
@@ -224,6 +414,32 @@ const initLogicFlow = () => {
 
     lf.on('zoom:change', (data) => {
       emit('zoom-change', data)
+    })
+
+    // 文本编辑完成事件
+    lf.on('text:update', async (data: any) => {
+      const { id, text, type } = data
+      if (type === 'node') {
+        const node = lf?.getNodeModelById(id)
+        if (node) {
+          const nodeData = {
+            ...node,
+            nodeName: text,
+            text: text
+          }
+          await syncNodeToBackend(nodeData, 'update')
+        }
+      } else if (type === 'edge') {
+        const edge = lf?.getEdgeModelById(id)
+        if (edge) {
+          const edgeData = {
+            ...edge,
+            lineName: text,
+            text: text
+          }
+          await syncEdgeToBackend(edgeData, 'update')
+        }
+      }
     })
 
     // 渲染初始数据
@@ -248,6 +464,55 @@ watch(() => props.modelValue, (newValue) => {
   }
 }, { immediate: true, deep: true })
 
+// 监听节点拖拽结束事件，更新位置数据
+watch(() => lf, (lfInstance) => {
+  if (lfInstance) {
+    lfInstance.on('node:drag-stop', (data) => {
+      const { node } = data
+      // 更新节点位置
+      const nodeIndex = nodes.value.findIndex(n => n.id === node.id)
+      if (nodeIndex !== -1) {
+        nodes.value[nodeIndex] = {
+          ...nodes.value[nodeIndex],
+          x: node.x,
+          y: node.y
+        }
+        // 触发父组件更新
+        emit('node-drag-stop', { node: nodes.value[nodeIndex] })
+      }
+    })
+
+    // 监听连接创建事件
+    lfInstance.on('connection:created', (data) => {
+      const { sourceNodeId, targetNodeId } = data
+      const newEdge = {
+        id: `edge_${Date.now()}`,
+        sourceNodeId: sourceNodeId,
+        targetNodeId: targetNodeId,
+        lineName: '',
+        condition: 0
+      }
+      edges.value = [...edges.value, newEdge]
+      emit('connect', newEdge)
+      ElMessage.success('连线创建成功，请右键编辑连线属性')
+    })
+
+    // 监听节点删除事件
+    lfInstance.on('node:delete', (data) => {
+      const { nodeId } = data
+      removeNode(nodeId)
+      emit('node-delete', { nodeId })
+    })
+
+    // 监听连线删除事件
+    lfInstance.on('edge:delete', (data) => {
+      const { edgeId } = data
+      removeEdge(edgeId)
+      emit('edge-delete', { edgeId })
+    })
+  }
+}, { immediate: true })
+
 // 监听内部状态变化，同步到父组件
 watch([nodes, edges], ([newNodes, newEdges]) => {
   const value = { nodes: newNodes, edges: newEdges }
@@ -256,60 +521,7 @@ watch([nodes, edges], ([newNodes, newEdges]) => {
   emit('edges-change', newEdges)
 }, { deep: true })
 
-// 节点ID计数器
-let nodeIdCounter = 5
 
-// 创建节点
-const createNode = (type: string, position: { x: number, y: number }) => {
-  const nodeId = nodeIdCounter.toString()
-  nodeIdCounter++
-
-  let nodeText = ''
-  let nodeType = type
-  
-  switch (type) {
-    case 'start':
-      nodeText = '开始'
-      nodeType = 'circle'
-      break
-    case 'end':
-      nodeText = '结束'
-      nodeType = 'circle'
-      break
-    case 'userTask':
-      nodeText = '用户任务'
-      nodeType = 'rect'
-      break
-    case 'systemTask':
-      nodeText = '系统任务'
-      nodeType = 'rect'
-      break
-    case 'decision':
-      nodeText = '判断'
-      nodeType = 'diamond'
-      break
-  }
-
-  const newNode = {
-    id: nodeId,
-    type: nodeType,
-    x: position.x,
-    y: position.y,
-    text: nodeText
-  }
-
-  console.log('准备添加节点:', newNode)
-  // 使用展开运算符创建新数组，确保响应式更新
-  nodes.value = [...nodes.value, newNode]
-  console.log('节点已添加，当前节点数量:', nodes.value.length)
-  
-  // 同步到 LogicFlow
-  if (lf) {
-    lf.addNode(newNode)
-  }
-  
-  return newNode
-}
 
 // 处理清空画布
 const handleClearAll = () => {
@@ -399,7 +611,12 @@ defineExpose({
       
       <!-- 操作按钮 -->
       <div class="flow-controls">
-        <el-button type="danger" @click="handleClearAll">清空画布</el-button>
+        <el-button type="primary" size="small" @click="handleClearAll">清空画布</el-button>
+        <div class="flow-tips">
+          <el-text size="small" type="info">
+            提示：拖拽左侧节点到画布创建，右键节点/连线可编辑，拖拽节点可调整位置
+          </el-text>
+        </div>
       </div>
     </div>
   </div>
@@ -431,6 +648,19 @@ defineExpose({
   top: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.flow-tips {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
 }
 
 // LogicFlow 全局样式覆盖
