@@ -414,6 +414,8 @@ const initLogicFlow = () => {
         const nodeData = {
           ...node,
           ...props.activeNode,
+          visualizationRegionId: node?.properties?.visualizationRegionId,
+          visualizationRegionName: node?.properties?.visualizationRegionName,
           nodeName: node?.text?.value,
           nodeType: node?.type
         }
@@ -511,6 +513,8 @@ const initLogicFlow = () => {
             const nodeData = {
               ...node,
               ...props.activeNode,
+              visualizationRegionId: node?.properties?.visualizationRegionId,
+              visualizationRegionName: node?.properties?.visualizationRegionName,
               nodeName: text,
               nodeType: node?.type
             }

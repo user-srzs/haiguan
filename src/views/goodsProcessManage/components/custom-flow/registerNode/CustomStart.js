@@ -2,7 +2,36 @@
 import { CircleNode, CircleNodeModel, h } from "@logicflow/core";
 
 // 提供节点 svg dom
-class CustomCircleNode extends CircleNode {}
+class CustomCircleNode extends CircleNode {
+    getShape() {
+        const { model, graphModel } = this.props;
+        const { x, y, r, width,properties } = model
+        const { fill, stroke, strokeWidth } = model.getNodeStyle()
+        return h('g', {},
+          [
+              h(
+                'circle',
+                {
+                    cx: x,
+                    cy: y,
+                    r,
+                    fill,
+                    stroke,
+                    strokeWidth,
+                }
+              ),
+              h(
+                'text',
+                {
+                    x: x - 15,
+                    y: y - r + 20,
+                },
+                properties.visualizationRegionName
+              )
+          ]
+        )
+    }
+}
 
 // 提供节点的样式
 class CustomCircleModel extends CircleNodeModel {
