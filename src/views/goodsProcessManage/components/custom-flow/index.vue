@@ -20,6 +20,10 @@ import {
 import { formAssignObject } from '@/utils';
 import { FlowNodeResult } from '@/api/processFlow/model.ts';
 import AddressDialog from '@/views/goodsProcessManage/components/custom-flow/addressDialog.vue';
+import CustomRect from '@/views/goodsProcessManage/components/custom-flow/registerNode/CustomRect';
+import CustomPolygon from '@/views/goodsProcessManage/components/custom-flow/registerNode/CustomPolygon';
+import CustomStart from '@/views/goodsProcessManage/components/custom-flow/registerNode/CustomStart';
+import CustomEnd from '@/views/goodsProcessManage/components/custom-flow/registerNode/CustomEnd';
 // 定义组件属性
 interface Props {
   activeNode: ActiveNode;
@@ -202,7 +206,8 @@ const dndPanelPatternItems =computed(() => [
     },
   },
   {
-    type: 'circle',
+    // type: 'circle',
+    type: "CustomStart",
     text: '开始',
     label: '开始节点',
     disabled: isTerminal.value,
@@ -216,7 +221,8 @@ const dndPanelPatternItems =computed(() => [
     }
   },
   {
-    type: 'rect',
+    // type: 'rect',
+    type: "CustomRect",
     text: 'text',
     label: '普通节点',
     icon: normalNodeIcon,
@@ -230,9 +236,10 @@ const dndPanelPatternItems =computed(() => [
     }
   },
   {
-    type: 'diamond',
+    // type: 'polygon',
+    type: "CustomPolygon",
     text: 'text',
-    label: '条件判断',
+    label: '条件节点',
     disabled: isTerminal.value,
     icon: decisionNodeIcon,
     className: isTerminal.value ? '' : 'hover-item',
@@ -244,7 +251,8 @@ const dndPanelPatternItems =computed(() => [
     }
   },
   {
-    type: 'circle',
+    // type: 'circle',
+    type: "CustomEnd",
     text: '结束',
     label: '结束节点',
     disabled: isTerminal.value,
@@ -307,6 +315,10 @@ const initLogicFlow = () => {
     themeMode: 'radius',
     plugins: [DndPanel, SelectionSelect, Menu]
   })
+  lf.register(CustomRect);
+  lf.register(CustomPolygon);
+  lf.register(CustomStart);
+  lf.register(CustomEnd);
   // 设置拖拽面板
   if (lf?.extension?.dndPanel) {
     (lf.extension.dndPanel as any).setPatternItems(dndPanelPatternItems.value)
