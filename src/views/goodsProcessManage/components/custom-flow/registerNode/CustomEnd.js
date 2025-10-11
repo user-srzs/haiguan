@@ -6,7 +6,7 @@ class CustomCircleNode extends CircleNode {
 
     getShape() {
         const { model, graphModel } = this.props;
-        const { x, y, r } = model
+        const { x, y, r, properties } = model
         const { fill, stroke, strokeWidth } = model.getNodeStyle()
         return h('g', {},
             [
@@ -31,6 +31,19 @@ class CustomCircleNode extends CircleNode {
                         stroke,
                         strokeWidth,
                     }
+                ),
+                h(
+                    'text',
+                    {
+                        x: x,
+                        y: y - r + 20, // 在圆形上方显示
+                        textAnchor: 'middle',
+                        dominantBaseline: 'central',
+                        fontSize: '12',
+                        fill: 'var(--el-color-primary)',
+                        fontWeight: 'bold',
+                    },
+                    properties?.visualizationRegionName || ''
                 )
             ]
         )
@@ -50,23 +63,23 @@ class CustomCircleModel extends CircleNodeModel {
         this.r = 50;
     }
 
-    getNodeStyle() {
-        const style = super.getNodeStyle();
-        // style.stroke = '#2987ff';
-        style.fill = 'transparent';
-        style.strokeWidth = 2;
-        return style;
-    }
+    // getNodeStyle() {
+    //     const style = super.getNodeStyle();
+    //     // style.stroke = '#2987ff';
+    //     style.fill = 'transparent';
+    //     style.strokeWidth = 2;
+    //     return style;
+    // }
 
-    getConnectedSourceRules() {
-        const rules = super.getConnectedSourceRules()
-        const notAsTarget = {
-            message: '终止节点不能作为连线的起点',
-            validate: () => false
-        }
-        rules.push(notAsTarget)
-        return rules
-    }
+    // getConnectedSourceRules() {
+    //     const rules = super.getConnectedSourceRules()
+    //     const notAsTarget = {
+    //         message: '终止节点不能作为连线的起点',
+    //         validate: () => false
+    //     }
+    //     rules.push(notAsTarget)
+    //     return rules
+    // }
 }
 
 export default {

@@ -4,32 +4,27 @@ import { CircleNode, CircleNodeModel, h } from "@logicflow/core";
 // 提供节点 svg dom
 class CustomCircleNode extends CircleNode {
     getShape() {
-        const { model, graphModel } = this.props;
-        const { x, y, r, width,properties } = model
-        const { fill, stroke, strokeWidth } = model.getNodeStyle()
-        return h('g', {},
-          [
-              h(
-                'circle',
-                {
-                    cx: x,
-                    cy: y,
-                    r,
-                    fill,
-                    stroke,
-                    strokeWidth,
-                }
-              ),
-              h(
-                'text',
-                {
-                    x: x - 15,
-                    y: y - r + 20,
-                },
-                properties.visualizationRegionName
-              )
-          ]
-        )
+      const { model, graphModel } = this.props;
+      const { x, y, r, width,properties } = model
+      const { fill, stroke, strokeWidth } = model.getNodeStyle()
+      // 获取父类的默认形状
+      const defaultShape = super.getShape();
+      // 添加文本元素
+      const textElement = h('text', {
+        x: x,
+        y: y - r + 20,
+        textAnchor: 'middle',
+        dominantBaseline: 'central',
+        fontSize: '12',
+        fill: 'var(--el-color-primary)',
+        fontWeight: 'bold',
+      }, properties?.visualizationRegionName || '');
+      // 如果默认形状是数组，添加文本；如果是单个元素，包装成数组
+      if (Array.isArray(defaultShape.children)) {
+        return h('g', {}, [...defaultShape.children, textElement]);
+      } else {
+        return h('g', {}, [defaultShape, textElement]);
+      }
     }
 }
 
@@ -45,21 +40,21 @@ class CustomCircleModel extends CircleNodeModel {
         //this.r = 30;
     }
 
-    getNodeStyle() {
-        const style = super.getNodeStyle();
-        // style.stroke = '#2987ff';
-        return style;
-    }
-
-    getConnectedTargetRules() {
-        const rules = super.getConnectedTargetRules();
-        const notAsTarget = {
-            message: '起始节点不能作为边的终点',
-            validate: () => false,
-        };
-        rules.push(notAsTarget);
-        return rules;
-    }
+    // getNodeStyle() {
+    //     const style = super.getNodeStyle();
+    //     // style.stroke = '#2987ff';
+    //     return style;
+    // }
+    //
+    // getConnectedTargetRules() {
+    //     const rules = super.getConnectedTargetRules();
+    //     const notAsTarget = {
+    //         message: '起始节点不能作为边的终点',
+    //         validate: () => false,
+    //     };
+    //     rules.push(notAsTarget);
+    //     return rules;
+    // }
 }
 
 export default {

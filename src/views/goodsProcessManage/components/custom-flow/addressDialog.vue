@@ -65,11 +65,14 @@
   const onSubmit = () => {
     formRef.value?.validate?.(async (valid: boolean) => {
       if(!valid) return;
-      const node = findTree(form.value.address, treeData.value);
+      let node: any | null = null;
+      if(form.value.address) {
+        node = findTree(form.value.address, treeData.value);
+      }
       const formData = {
         ...props.editNode.properties,
-        visualizationRegionId: node?.node?.id,
-        visualizationRegionName: node?.node?.nodeName,
+        visualizationRegionId: node?.node?.id || '',
+        visualizationRegionName: node?.node?.nodeName || '',
       };
       emit('onSubmit', formData)
     });
