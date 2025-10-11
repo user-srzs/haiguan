@@ -77,9 +77,15 @@ const getFlow = async (where = {}) => {
       properties: {...item}
     }
   }) ?? [];
-  lf.render({
-    nodes: nodes.value,
-    edges: edges.value
+  nextTick(() => {
+    const transform = lf?.getTransform();
+    initLogicFlow()
+    lf?.zoom(transform?.SCALE_X);
+    lf?.translate(transform?.TRANSLATE_X, transform?.TRANSLATE_Y);
+    // lf.render({
+    //   nodes: nodes.value,
+    //   edges: edges.value
+    // })
   })
 }
 
@@ -268,6 +274,7 @@ const initLogicFlow = () => {
       backgroundColor: '#f8fafc'
     },
     // allowResize: true, // 允许节点拖拽改变大小
+    // stopMoveGraph: true, // 禁止移动画布
     grid: {
       size: 20,
       visible: true
@@ -286,12 +293,6 @@ const initLogicFlow = () => {
       },
       baseEdge: {
         stroke: "var(--el-color-primary)",
-      },
-      edgeText: {
-        color: "#000",
-        background: {
-          fill: "#FFFFFF",
-        },
       },
       anchorLine: {
         stroke: "var(--el-color-primary)",
@@ -320,7 +321,6 @@ const initLogicFlow = () => {
           icon: true,
           callback: async (node: any) => {
             lf?.deleteNode(node.id)
-            // const success = await syncNodeToBackend(node, 'delete')
           }
         },
         {
@@ -337,18 +337,6 @@ const initLogicFlow = () => {
           icon: true,
           callback: async (node: any) => {
             lf?.cloneNode(node.id)
-            // const clonedNode =
-            // if (clonedNode) {
-            //   // 为复制的节点生成新的ID和位置
-            //   const newNodeData = {
-            //     ...clonedNode,
-            //     id: `node_${Date.now()}`,
-            //     x: (node.x || 0) + 50,
-            //     y: (node.y || 0) + 50,
-            //     nodeName: `${node.nodeName || node.text || '节点'}_副本`
-            //   }
-            //   await syncNodeToBackend(newNodeData, 'create')
-            // }
           }
         },
         {
@@ -408,7 +396,7 @@ const initLogicFlow = () => {
     });
     // 节点更新
     lf.on('node:drop',async (data) => {
-      console.log('data', data);
+      console.log('data``````````````````````````````', data);
       try {
         const { data: node } = data
         const nodeData = {
