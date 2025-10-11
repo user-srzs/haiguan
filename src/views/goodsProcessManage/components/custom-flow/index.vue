@@ -564,7 +564,7 @@ const initLogicFlow = () => {
   }
 }
 
-const init = () => {
+const init = async () => {
   if (lf?.extension?.dndPanel) {
     (lf.extension.dndPanel as any).setPatternItems(dndPanelPatternItems.value)
   }
@@ -572,7 +572,10 @@ const init = () => {
     clearAll();
     return;
   }
-  getFlow();
+  await getFlow();
+  nextTick(() => {
+    lf?.translateCenter();
+  })
 }
 
 // 监听props变化，同步到内部状态
