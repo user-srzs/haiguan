@@ -19,6 +19,7 @@ import {
 } from '@/api/processFlow';
 import { formAssignObject } from '@/utils';
 import { FlowNodeResult } from '@/api/processFlow/model.ts';
+import AddressDialog from '@/views/goodsProcessManage/components/custom-flow/addressDialog.vue';
 // 定义组件属性
 interface Props {
   activeNode: ActiveNode;
@@ -64,7 +65,8 @@ const getFlow = async (where = {}) => {
       x: Number(item.x),
       y: Number(item.y),
       visualizationRegionId: item.visualizationRegionId,
-      visualizationRegionName: item.visualizationRegionName
+      visualizationRegionName: item.visualizationRegionName,
+      properties: {...item}
     }
   }) ?? [];
   edges.value = lineList?.map(item => {
@@ -72,6 +74,7 @@ const getFlow = async (where = {}) => {
       ...item,
       type: 'bezier',
       text: item.lineName,
+      properties: {...item}
     }
   }) ?? [];
   lf.render({
@@ -172,7 +175,7 @@ const delEdge = async (id: any) => {
 }
 
 const isTerminal = computed(() => {
-  return props.activeNode?.activeProcessTerminalType === 'terminal'
+  return !props.activeNode?.activeProcessTerminalType || props.activeNode?.activeProcessTerminalType === 'terminal'
 })
 
 const dndPanelPatternItems =computed(() => [
@@ -347,7 +350,16 @@ const initLogicFlow = () => {
             //   await syncNodeToBackend(newNodeData, 'create')
             // }
           }
-        }
+        },
+        {
+          className: 'lf-menu-address',
+          text: '绑定地址',
+          icon: true,
+          callback: (node: any) => {
+            dialogVisible.value = true
+            editNode.value = { ...node }
+          }
+        },
       ],
       edgeMenu: [
         {
@@ -411,7 +423,9 @@ const initLogicFlow = () => {
           ElMessage.error(msg || '操作失败');
           return;
         }
-        await getFlow();
+        nextTick(async () => {
+          await getFlow();
+        })
       }catch (error) {
         ElMessage.error('操作失败');
         console.error('error', error);
@@ -582,6 +596,22 @@ const clearAll = () => {
   }
 }
 
+// 绑定地址弹窗dialogVisible
+const dialogVisible = ref(false);
+const editNode = ref(null);
+
+const onSubmit = async (formData: any) => {
+  const res = await updateNode(formData);
+  const { code, msg = '' } = res || {};
+  if(code !== 1) {
+    ElMessage.error(msg || '操作失败');
+    return;
+  }
+  ElMessage.success('绑定成功!');
+  dialogVisible.value = false;
+  await getFlow();
+}
+
 // 组件挂载时初始化 LogicFlow
 onMounted(() => {
   nextTick(() => {
@@ -619,6 +649,11 @@ defineExpose({
       </div>
     </div>
   </div>
+  <address-dialog
+    v-model:visible="dialogVisible"
+    :editNode="editNode"
+    @onSubmit="onSubmit"
+  />
 </template>
 
 <style scoped lang="scss">
