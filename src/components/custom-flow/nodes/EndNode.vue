@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-// LogicFlow 不需要 Handle 组件
+import { Handle } from '@vue-flow/core'
 
 interface Props {
   id: string

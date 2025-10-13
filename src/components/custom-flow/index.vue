@@ -1,22 +1,16 @@
 <script setup lang="ts">
-import LogicFlow from '@logicflow/core'
-import '@logicflow/core/lib/style/index.css'
-import { DndPanel, SelectionSelect, Menu } from '@logicflow/extension'
-import '@logicflow/extension/lib/style/index.css'
+import { VueFlow, Panel } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
 import { ElMessage } from 'element-plus'
-import decisionNodeIcon from "@/assets/flow/decisionNode.svg";
-import endNodeIcon from "@/assets/flow/end.svg";
-import normalNodeIcon from "@/assets/flow/normalNode.svg";
-import startNodeIcon from "@/assets/flow/start.svg";
-import { 
-  createProcessFlowNode,
-  updateProcessFlowNode,
-  removeProcessFlowNode,
-  createProcessFlowLine,
-  updateProcessFlowLine,
-  removeProcessFlowLine
-} from '@/api/processFlow';
+
 // 导入自定义组件
+import Sidebar from './components/Sidebar.vue'
+import ContextMenu from './components/ContextMenu.vue'
+import EditDialog from './components/EditDialog.vue'
+import StartNode from './nodes/StartNode.vue'
+import EndNode from './nodes/EndNode.vue'
+import NormalNode from './nodes/NormalNode.vue'
+import DecisionNode from './nodes/DecisionNode.vue'
 
 // 禁用属性继承，手动控制属性传递
 defineOptions({
@@ -29,18 +23,10 @@ interface Props {
     nodes: any[]
     edges: any[]
   }
-  // 后端API相关参数
-  arrivalOrDeparture?: string
-  processGoodsTypeId?: number
-  // 是否启用自动同步到后端
-  enableAutoSync?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: () => ({ nodes: [], edges: [] }),
-  arrivalOrDeparture: '',
-  processGoodsTypeId: 0,
-  enableAutoSync: true
+  modelValue: () => ({ nodes: [], edges: [] })
 })
 
 // 定义事件
@@ -48,7 +34,9 @@ const emit = defineEmits<{
   'update:modelValue': [value: { nodes: any[], edges: any[] }]
   'nodes-change': [nodes: any[]]
   'edges-change': [edges: any[]]
-  // LogicFlow 原生事件
+  // Vue Flow 原生事件
+  'nodes-updated': [event: any]
+  'edges-updated': [event: any]
   'node-click': [event: any]
   'edge-click': [event: any]
   'node-drag': [event: any]
@@ -58,460 +46,101 @@ const emit = defineEmits<{
   'connect': [event: any]
   'connect-start': [event: any]
   'connect-end': [event: any]
+  'pane-ready': [event: any]
+  'move': [event: any]
+  'move-start': [event: any]
+  'move-end': [event: any]
   'selection-change': [event: any]
   'viewport-change': [event: any]
   'zoom-change': [event: any]
   'init': [event: any]
   'error': [event: any]
-  // 自定义事件
-  'node-delete': [event: { nodeId: string }]
-  'edge-delete': [event: { edgeId: string }]
-  'node-edit': [event: { node: any }]
-  'edge-edit': [event: { edge: any }]
 }>()
 
-// LogicFlow 实例
-let lf: LogicFlow | null = null
-const containerRef = ref<HTMLElement>()
-
 // 节点和边的数据
-const nodes = ref([])
-const edges = ref([])
-
-// 后端API同步函数
-const syncNodeToBackend = async (nodeData: any, operation: 'create' | 'update' | 'delete') => {
-  if (!props.enableAutoSync) return
-  
-  try {
-    const formData = {
-      id: nodeData.id,
-      arrivalOrDeparture: props.arrivalOrDeparture,
-      processGoodsTypeId: props.processGoodsTypeId,
-      nodeName: nodeData.nodeName || nodeData.text || '',
-      nodeType: nodeData.nodeType || getNodeTypeByShape(nodeData.type),
-      x: nodeData.x?.toString() || '0',
-      y: nodeData.y?.toString() || '0',
-      visualizationRegionId: nodeData.visualizationRegionId || '',
-      visualizationRegionName: nodeData.visualizationRegionName || ''
-    }
-
-    let res
-    switch (operation) {
-      case 'create':
-        res = await createProcessFlowNode(formData)
-        break
-      case 'update':
-        res = await updateProcessFlowNode(formData)
-        break
-      case 'delete':
-        res = await removeProcessFlowNode(nodeData.id)
-        break
-    }
-    
-    const { code, msg = '' } = res as any
-    if (code !== 1) {
-      ElMessage.error(msg || `${operation}节点失败`)
-      return false
-    }
-    
-    ElMessage.success(`${operation === 'create' ? '创建' : operation === 'update' ? '更新' : '删除'}节点成功`)
-    return true
-  } catch (error) {
-    console.error(`${operation}节点失败:`, error)
-    ElMessage.error(`${operation}节点失败`)
-    return false
+const nodes = ref([
+  {
+    id: '1',
+    type: 'start',
+    position: { x: 100, y: 100 },
+    data: { label: '开始' }
+  },
+  {
+    id: '2',
+    type: 'userTask',
+    position: { x: 100, y: 250 },
+    data: { label: '用户任务' }
+  },
+  {
+    id: '3',
+    type: 'decision',
+    position: { x: 100, y: 400 },
+    data: { label: '判断条件' }
+  },
+  {
+    id: '4',
+    type: 'end',
+    position: { x: 300, y: 400 },
+    data: { label: '结束' }
   }
-}
+])
 
-const syncEdgeToBackend = async (edgeData: any, operation: 'create' | 'update' | 'delete') => {
-  if (!props.enableAutoSync) return
-  
-  try {
-    const formData = {
-      id: edgeData.id,
-      arrivalOrDeparture: props.arrivalOrDeparture,
-      processGoodsTypeId: props.processGoodsTypeId?.toString() || '0',
-      sourceNodeId: edgeData.sourceNodeId,
-      targetNodeId: edgeData.targetNodeId,
-      lineName: edgeData.lineName || edgeData.text || '连线',
-      condition: edgeData.condition || 0
-    }
-
-    let res
-    switch (operation) {
-      case 'create':
-        res = await createProcessFlowLine(formData)
-        break
-      case 'update':
-        res = await updateProcessFlowLine(formData)
-        break
-      case 'delete':
-        res = await removeProcessFlowLine(edgeData.id)
-        break
-    }
-    
-    const { code, msg = '' } = res as any
-    if (code !== 1) {
-      ElMessage.error(msg || `${operation}连线失败`)
-      return false
-    }
-    
-    ElMessage.success(`${operation === 'create' ? '创建' : operation === 'update' ? '更新' : '删除'}连线成功`)
-    return true
-  } catch (error) {
-    console.error(`${operation}连线失败:`, error)
-    ElMessage.error(`${operation}连线失败`)
-    return false
+const edges = ref([
+  {
+    id: 'edge-1',
+    source: '1',
+    target: '2',
+    sourceHandle: '1-bottom',
+    targetHandle: '2-top',
+    type: 'default',
+    animated: false,
+  },
+  {
+    id: 'edge-2',
+    source: '2',
+    target: '3',
+    sourceHandle: '2-bottom',
+    targetHandle: '3-top',
+    type: 'default',
+    animated: false,
+  },
+  {
+    id: 'edge-3',
+    source: '3',
+    target: '4',
+    sourceHandle: '3-right',
+    targetHandle: '4-left',
+    type: 'default',
+    animated: false,
   }
-}
+])
 
-// 根据节点形状获取节点类型
-const getNodeTypeByShape = (type: string) => {
-  switch (type) {
-    case 'circle':
-      return '1' // 开始节点
-    case 'rect':
-      return '2' // 普通节点
-    case 'diamond':
-      return '3' // 判断节点
-    default:
-      return '2'
-  }
-}
-
-// 初始化 LogicFlow
-const initLogicFlow = () => {
-  if (!containerRef.value) return
-
-  // 使用扩展插件
-  LogicFlow.use(DndPanel)
-  LogicFlow.use(SelectionSelect)
-  // LogicFlow.use(Menu)
-
-  lf = new LogicFlow({
-    container: containerRef.value,
-    edgeType: 'bezier',
-    background: {
-      backgroundColor: '#f8fafc'
-    },
-    allowResize: true,
-    grid: {
-      size: 20,
-      visible: true
-    },
-    keyboard: {
-      enabled: true
-    },
-    style: {
-      arrow: {
-        offset: 10,
-        verticalLength: 5,
-        endArrowType: 'none'
-      },
-      baseNode: {
-        stroke: "var(--el-color-primary)",
-      },
-      baseEdge: {
-        stroke: "var(--el-color-primary)",
-      },
-      anchorLine: {
-        stroke: "var(--el-color-primary)",
-      },
-      outline: {
-        stroke: "var(--el-color-primary)",
-        hover: {
-          stroke: "var(--el-color-primary)",
-        },
-      }
-    },
-    themeMode: 'radius',
-    plugins: [DndPanel, SelectionSelect, Menu]
-  })
-  // 设置拖拽面板
-  if (lf?.extension?.dndPanel) {
-    (lf.extension.dndPanel as any).setPatternItems([
-    {
-      label: '选区',
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAAH6ji2bAAAABGdBTUEAALGPC/xhBQAAAOVJREFUOBGtVMENwzAIjKP++2026ETdpv10iy7WFbqFyyW6GBywLCv5gI+Dw2Bluj1znuSjhb99Gkn6QILDY2imo60p8nsnc9bEo3+QJ+AKHfMdZHnl78wyTnyHZD53Zzx73MRSgYvnqgCUHj6gwdck7Zsp1VOrz0Uz8NbKunzAW+Gu4fYW28bUYutYlzSa7B84Fh7d1kjLwhcSdYAYrdkMQVpsBr5XgDGuXwQfQr0y9zwLda+DUYXLaGKdd2ZTtvbolaO87pdo24hP7ov16N0zArH1ur3iwJpXxm+v7oAJNR4JEP8DoAuSFEkYH7cAAAAASUVORK5CYII=',
-      callback: () => {
-        (lf?.extension.selectionSelect as any).openSelectionSelect()
-        lf?.once('selection:selected', () => {
-          (lf?.extension.selectionSelect as any).closeSelectionSelect()
-        })
-      },
-    },
-    {
-      type: 'circle',
-      text: '开始',
-      label: '开始节点',
-      icon: startNodeIcon,
-      callback: async (node: any) => {
-        const nodeData = {
-          ...node,
-          nodeName: node.text || '开始节点',
-          nodeType: '1'
-        }
-        await syncNodeToBackend(nodeData, 'create')
-      }
-    },
-    {
-      type: 'rect',
-      text: 'text',
-      label: '普通节点',
-      icon: normalNodeIcon,
-      className: 'important-node',
-      callback: async (node: any) => {
-        const nodeData = {
-          ...node,
-          nodeName: node.text || '普通节点',
-          nodeType: '2'
-        }
-        await syncNodeToBackend(nodeData, 'create')
-      }
-    },
-    {
-      type: 'diamond',
-      text: 'text',
-      label: '条件判断',
-      icon: decisionNodeIcon,
-      callback: async (node: any) => {
-        const nodeData = {
-          ...node,
-          nodeName: node.text || '条件判断',
-          nodeType: '3'
-        }
-        await syncNodeToBackend(nodeData, 'create')
-      }
-    },
-    {
-      type: 'circle',
-      text: '结束',
-      label: '结束节点',
-      icon: endNodeIcon,
-      callback: async (node: any) => {
-        const nodeData = {
-          ...node,
-          nodeName: node.text || '结束节点',
-          nodeType: '4'
-        }
-        await syncNodeToBackend(nodeData, 'create')
-      }
-    }
-  ])
-  }
-  // 设置右键菜单
-  if (lf?.extension?.menu) {
-    (lf.extension.menu as any).setMenuConfig({
-      nodeMenu: [
-        {
-          className: 'lf-menu-delete',
-          text: '删除',
-          icon: true,
-          callback: async (node: any) => {
-            const success = await syncNodeToBackend(node, 'delete')
-            if (success) {
-              lf?.deleteNode(node.id)
-            }
-          }
-        },
-        {
-          className: 'lf-menu-edit',
-          text: '编辑',
-          icon: true,
-          callback: (node: any) => {
-            lf?.editText(node.id)
-          }
-        },
-        {
-          className: 'lf-menu-copy',
-          text: '复制',
-          icon: true,
-          callback: async (node: any) => {
-            const clonedNode = lf?.cloneNode(node.id)
-            if (clonedNode) {
-              // 为复制的节点生成新的ID和位置
-              const newNodeData = {
-                ...clonedNode,
-                id: `node_${Date.now()}`,
-                x: (node.x || 0) + 50,
-                y: (node.y || 0) + 50,
-                nodeName: `${node.nodeName || node.text || '节点'}_副本`
-              }
-              await syncNodeToBackend(newNodeData, 'create')
-            }
-          }
-        }
-      ],
-      edgeMenu: [
-        {
-          className: 'lf-menu-delete',
-          text: '删除',
-          icon: true,
-          callback: async (edge: any) => {
-            const success = await syncEdgeToBackend(edge, 'delete')
-            if (success) {
-              lf?.deleteEdge(edge.id)
-            }
-          }
-        },
-        {
-          className: 'lf-menu-edit',
-          text: '编辑',
-          icon: true,
-          callback: (edge: any) => {
-            lf?.editText(edge.id)
-          }
-        }
-      ],
-      graphMenu: [],
-  })
-  }
-  // 绑定事件
-  if (lf) {
-    lf.on('node:click', (data) => {
-      emit('node-click', data)
-    })
-
-    lf.on('edge:click', (data) => {
-      emit('edge-click', data)
-    })
-
-    lf.on('node:drag', (data) => {
-      emit('node-drag', data)
-    })
-
-    lf.on('node:drag-stop', async (data) => {
-      // 同步节点位置到后端
-      await syncNodeToBackend(data.node, 'update')
-      emit('node-drag-stop', data)
-    })
-
-    lf.on('edge:update', (data) => {
-      emit('edge-update', data)
-    })
-
-    lf.on('edge:update-end', (data) => {
-      emit('edge-update-end', data)
-    })
-
-    lf.on('connection:not-allowed', () => {
-      ElMessage.warning('连接不允许')
-    })
-
-    lf.on('connection:created', async (data) => {
-      // 同步连线创建到后端
-      await syncEdgeToBackend(data.edge, 'create')
-      emit('connect', data)
-    })
-
-    lf.on('selection:selected', (data) => {
-      emit('selection-change', data)
-    })
-
-    lf.on('viewport:change', (data) => {
-      emit('viewport-change', data)
-    })
-
-    lf.on('zoom:change', (data) => {
-      emit('zoom-change', data)
-    })
-
-    // 文本编辑完成事件
-    lf.on('text:update', async (data: any) => {
-      const { id, text, type } = data
-      if (type === 'node') {
-        const node = lf?.getNodeModelById(id)
-        if (node) {
-          const nodeData = {
-            ...node,
-            nodeName: text,
-            text: text
-          }
-          await syncNodeToBackend(nodeData, 'update')
-        }
-      } else if (type === 'edge') {
-        const edge = lf?.getEdgeModelById(id)
-        if (edge) {
-          const edgeData = {
-            ...edge,
-            lineName: text,
-            text: text
-          }
-          await syncEdgeToBackend(edgeData, 'update')
-        }
-      }
-    })
-
-    // 渲染初始数据
-    lf.render({
-      nodes: nodes.value,
-      edges: edges.value
-    })
-
-    emit('init', lf)
-  }
+// 注册自定义节点类型
+const nodeTypes = {
+  start: StartNode,
+  end: EndNode,
+  userTask: NormalNode,
+  systemTask: NormalNode,
+  decision: DecisionNode
 }
 
 // 监听props变化，同步到内部状态
 watch(() => props.modelValue, (newValue) => {
-  if (newValue && lf) {
+  if (newValue) {
     nodes.value = newValue.nodes || []
     edges.value = newValue.edges || []
-    lf.render({
-      nodes: nodes.value,
-      edges: edges.value
-    })
   }
 }, { immediate: true, deep: true })
 
-// 监听节点拖拽结束事件，更新位置数据
-watch(() => lf, (lfInstance) => {
-  if (lfInstance) {
-    lfInstance.on('node:drag-stop', (data) => {
-      const { node } = data
-      // 更新节点位置
-      const nodeIndex = nodes.value.findIndex(n => n.id === node.id)
-      if (nodeIndex !== -1) {
-        nodes.value[nodeIndex] = {
-          ...nodes.value[nodeIndex],
-          x: node.x,
-          y: node.y
-        }
-        // 触发父组件更新
-        emit('node-drag-stop', { node: nodes.value[nodeIndex] })
-      }
-    })
-
-    // 监听连接创建事件
-    lfInstance.on('connection:created', (data) => {
-      const { sourceNodeId, targetNodeId } = data
-      const newEdge = {
-        id: `edge_${Date.now()}`,
-        sourceNodeId: sourceNodeId,
-        targetNodeId: targetNodeId,
-        lineName: '',
-        condition: 0
-      }
-      edges.value = [...edges.value, newEdge]
-      emit('connect', newEdge)
-      ElMessage.success('连线创建成功，请右键编辑连线属性')
-    })
-
-    // 监听节点删除事件
-    lfInstance.on('node:delete', (data) => {
-      const { nodeId } = data
-      removeNode(nodeId)
-      emit('node-delete', { nodeId })
-    })
-
-    // 监听连线删除事件
-    lfInstance.on('edge:delete', (data) => {
-      const { edgeId } = data
-      removeEdge(edgeId)
-      emit('edge-delete', { edgeId })
-    })
+// 监听外部传入的nodes和edges变化
+watch(() => [props.modelValue?.nodes, props.modelValue?.edges], ([newNodes, newEdges]) => {
+  if (newNodes) {
+    nodes.value = newNodes
   }
-}, { immediate: true })
+  if (newEdges) {
+    edges.value = newEdges
+  }
+}, { deep: true })
 
 // 监听内部状态变化，同步到父组件
 watch([nodes, edges], ([newNodes, newEdges]) => {
@@ -521,7 +150,199 @@ watch([nodes, edges], ([newNodes, newEdges]) => {
   emit('edges-change', newEdges)
 }, { deep: true })
 
+// 右键菜单状态
+const contextMenu = reactive({
+  visible: false,
+  position: { x: 0, y: 0 },
+  nodeId: ''
+})
 
+// 编辑对话框状态
+const editDialog = reactive({
+  visible: false,
+  nodeId: '',
+  nodeLabel: ''
+})
+
+
+// 节点ID计数器
+let nodeIdCounter = 2
+
+// 创建节点
+const createNode = (type: string, position: { x: number, y: number }) => {
+  const nodeId = nodeIdCounter.toString()
+  nodeIdCounter++
+
+  let nodeData = { label: '' }
+  
+  switch (type) {
+    case 'start':
+      nodeData = { label: '开始' }
+      break
+    case 'end':
+      nodeData = { label: '结束' }
+      break
+    case 'userTask':
+      nodeData = { label: '用户任务' }
+      break
+    case 'systemTask':
+      nodeData = { label: '系统任务' }
+      break
+    case 'decision':
+      nodeData = { label: '判断' }
+      break
+  }
+
+  const newNode = {
+    id: nodeId,
+    type,
+    position,
+    data: nodeData
+  }
+
+  console.log('准备添加节点:', newNode)
+  // 使用展开运算符创建新数组，确保响应式更新
+  nodes.value = [...nodes.value, newNode]
+  console.log('节点已添加，当前节点数量:', nodes.value.length)
+  return newNode
+}
+
+// 处理拖拽开始
+const handleDragStart = (type: string, event: DragEvent) => {
+  console.log('主组件收到拖拽开始事件:', type)
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('application/vueflow', type)
+    event.dataTransfer.effectAllowed = 'copy'
+    console.log('主组件设置拖拽数据:', type)
+  }
+}
+
+// 处理侧边栏节点点击
+const handleSidebarNodeClick = (type: string) => {
+  if (type === 'selection') {
+    // 选择工具逻辑
+    return
+  }
+  
+  // 在画布中心创建节点
+  const position = { x: 300, y: 200 }
+  console.log('点击创建节点:', type, position)
+  createNode(type, position)
+}
+
+
+// 处理画布拖拽放置
+const handleDrop = (event: DragEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  const type = event.dataTransfer?.getData('application/vueflow')
+  if (!type) {
+    console.log('未找到拖拽数据')
+    return
+  }
+
+  console.log('拖拽类型:', type)
+
+  // 获取VueFlow容器的位置
+  const vueFlowContainer = document.querySelector('.vue-flow')
+  if (!vueFlowContainer) {
+    console.log('未找到VueFlow容器')
+    return
+  }
+  
+  const rect = vueFlowContainer.getBoundingClientRect()
+  
+  // 计算相对于VueFlow容器的位置
+  const position = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  }
+
+  console.log('拖拽放置:', { type, position, clientX: event.clientX, clientY: event.clientY, rect })
+  
+  const newNode = createNode(type, position)
+  console.log('创建的新节点:', newNode)
+  console.log('当前所有节点:', nodes.value)
+  
+  // 强制更新VueFlow
+  nextTick(() => {
+    console.log('VueFlow更新后的节点:', nodes.value)
+  })
+}
+
+// 处理拖拽悬停
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'copy'
+  }
+}
+
+// 处理拖拽进入
+const handleDragEnter = (event: DragEvent) => {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'copy'
+  }
+}
+
+// 处理节点右键
+const handleNodeContextMenu = (event: MouseEvent, nodeId: string) => {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  contextMenu.visible = true
+  contextMenu.position = { x: event.clientX, y: event.clientY }
+  contextMenu.nodeId = nodeId
+}
+
+// 处理右键菜单操作
+const handleContextMenuEdit = () => {
+  const node = nodes.value.find(n => n.id === contextMenu.nodeId)
+  if (node) {
+    editDialog.visible = true
+    editDialog.nodeId = node.id
+    editDialog.nodeLabel = node.data.label
+  }
+}
+
+const handleContextMenuCopy = () => {
+  const node = nodes.value.find(n => n.id === contextMenu.nodeId)
+  if (node) {
+    const newNode = createNode(node.type, { 
+      x: node.position.x + 50, 
+      y: node.position.y + 50 
+    })
+    newNode.data.label = node.data.label + ' 副本'
+    ElMessage.success('节点已复制')
+  }
+}
+
+const handleContextMenuDelete = () => {
+  const index = nodes.value.findIndex(n => n.id === contextMenu.nodeId)
+  if (index > -1) {
+    nodes.value.splice(index, 1)
+    // 同时删除相关的边
+    edges.value = edges.value.filter(edge => 
+      edge.source !== contextMenu.nodeId && edge.target !== contextMenu.nodeId
+    )
+    ElMessage.success('节点已删除')
+  }
+}
+
+const handleContextMenuClose = () => {
+  contextMenu.visible = false
+}
+
+// 处理编辑确认
+const handleEditConfirm = (label: string) => {
+  const node = nodes.value.find(n => n.id === editDialog.nodeId)
+  if (node) {
+    node.data.label = label
+    ElMessage.success('节点文本已更新')
+  }
+}
 
 // 处理清空画布
 const handleClearAll = () => {
@@ -532,60 +353,131 @@ const handleClearAll = () => {
 // 暴露给父组件的方法
 const addNode = (node: any) => {
   nodes.value = [...nodes.value, node]
-  if (lf) {
-    lf.addNode(node)
-  }
   return node
 }
 
 const removeNode = (nodeId: string) => {
   nodes.value = nodes.value.filter(n => n.id !== nodeId)
   // 同时删除相关的边
-  edges.value = edges.value.filter(e => e.sourceNodeId !== nodeId && e.targetNodeId !== nodeId)
-  if (lf) {
-    lf.deleteNode(nodeId)
-  }
+  edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
 }
 
 const addEdge = (edge: any) => {
   edges.value = [...edges.value, edge]
-  if (lf) {
-    lf.addEdge(edge)
-  }
   return edge
 }
 
 const removeEdge = (edgeId: string) => {
   edges.value = edges.value.filter(e => e.id !== edgeId)
-  if (lf) {
-    lf.deleteEdge(edgeId)
-  }
 }
 
 const clearAll = () => {
   nodes.value = []
   edges.value = []
-  if (lf) {
-    lf.clearData()
-  }
 }
 
 const getNodes = () => nodes.value
 const getEdges = () => edges.value
 
-// 组件挂载时初始化 LogicFlow
-onMounted(() => {
-  nextTick(() => {
-    initLogicFlow()
-  })
-})
+// Vue Flow 原生事件处理器
+const handleNodesUpdated = (event: any) => {
+  emit('nodes-updated', event)
+}
 
-// 组件卸载时清理
-onUnmounted(() => {
-  if (lf) {
-    lf.destroy()
+const handleEdgesUpdated = (event: any) => {
+  emit('edges-updated', event)
+}
+
+const handleNodeClick = (event: any) => {
+  emit('node-click', event)
+}
+
+const handleEdgeClick = (event: any) => {
+  emit('edge-click', event)
+}
+
+const handleNodeDrag = (event: any) => {
+  emit('node-drag', event)
+}
+
+const handleNodeDragStop = (event: any) => {
+  emit('node-drag-stop', event)
+}
+
+const handleEdgeUpdate = (event: any) => {
+  emit('edge-update', event)
+}
+
+const handleEdgeUpdateEnd = (event: any) => {
+  emit('edge-update-end', event)
+}
+
+const handleConnect = (event: any) => {
+  console.log('连接事件:', event)
+  
+  // 创建新的边
+  const newEdge = {
+    id: `edge-${Date.now()}`,
+    source: event.source,
+    target: event.target,
+    sourceHandle: event.sourceHandle,
+    targetHandle: event.targetHandle,
+    type: 'default',
+    animated: false
   }
-})
+  
+  // 添加到边数组
+  edges.value = [...edges.value, newEdge]
+  
+  console.log('新边已创建:', newEdge)
+  console.log('当前所有边:', edges.value)
+  
+  emit('connect', event)
+}
+
+const handleConnectStart = (event: any) => {
+  emit('connect-start', event)
+}
+
+const handleConnectEnd = (event: any) => {
+  emit('connect-end', event)
+}
+
+const handlePaneReady = (event: any) => {
+  emit('pane-ready', event)
+}
+
+const handleMove = (event: any) => {
+  emit('move', event)
+}
+
+const handleMoveStart = (event: any) => {
+  emit('move-start', event)
+}
+
+const handleMoveEnd = (event: any) => {
+  emit('move-end', event)
+}
+
+const handleSelectionChange = (event: any) => {
+  emit('selection-change', event)
+}
+
+const handleViewportChange = (event: any) => {
+  emit('viewport-change', event)
+}
+
+const handleZoomChange = (event: any) => {
+  emit('zoom-change', event)
+}
+
+const handleInit = (event: any) => {
+  emit('init', event)
+}
+
+const handleError = (event: any) => {
+  emit('error', event)
+}
 
 // 暴露方法给父组件
 defineExpose({
@@ -606,19 +498,117 @@ defineExpose({
   <div class="flow-container">
     <!-- 主画布区域 -->
     <div class="flow-main">
-      <!-- LogicFlow 容器 -->
-      <div ref="containerRef" class="logic-flow-container"></div>
-      
-      <!-- 操作按钮 -->
-      <div class="flow-controls">
-        <el-button type="primary" size="small" @click="handleClearAll">清空画布</el-button>
-        <div class="flow-tips">
-          <el-text size="small" type="info">
-            提示：拖拽左侧节点到画布创建，右键节点/连线可编辑，拖拽节点可调整位置
-          </el-text>
-        </div>
-      </div>
+      <VueFlow 
+        v-model:nodes="nodes" 
+        v-model:edges="edges"
+        :node-types="nodeTypes"
+        @nodes-updated="handleNodesUpdated"
+        @edges-updated="handleEdgesUpdated"
+        @node-click="handleNodeClick"
+        @edge-click="handleEdgeClick"
+        @node-drag="handleNodeDrag"
+        @node-drag-stop="handleNodeDragStop"
+        @edge-update="handleEdgeUpdate"
+        @edge-update-end="handleEdgeUpdateEnd"
+        @connect="handleConnect"
+        @connect-start="handleConnectStart"
+        @connect-end="handleConnectEnd"
+        @pane-ready="handlePaneReady"
+        @move="handleMove"
+        @move-start="handleMoveStart"
+        @move-end="handleMoveEnd"
+        @selection-change="handleSelectionChange"
+        @viewport-change="handleViewportChange"
+        @zoom-change="handleZoomChange"
+        @init="handleInit"
+        @error="handleError"
+        @drop="handleDrop"
+        @dragover="handleDragOver"
+        @dragenter="handleDragEnter"
+        :nodes-draggable="true"
+        :nodes-connectable="true"
+        :edges-updatable="true"
+        :fit-view-on-init="false"
+        v-bind="$attrs"
+        class="vue-flow"
+      >
+        <!-- 节点工具栏 -->
+        <Sidebar 
+          @node-click="handleSidebarNodeClick"
+          @drag-start="handleDragStart"
+        />
+        <Background />
+        
+        <!-- 操作按钮 -->
+        <Panel position="top-right">
+          <el-button type="danger" @click="handleClearAll">清空画布</el-button>
+        </Panel>
+                
+        <!-- 自定义节点模板 -->
+        <template #node-start="{ node }">
+          <StartNode 
+            :id="node?.id"
+            :data="node?.data" 
+            :selected="node?.selected"
+            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
+          />
+        </template>
+        
+        <template #node-end="{ node }">
+          <EndNode 
+            :id="node?.id"
+            :data="node?.data" 
+            :selected="node?.selected"
+            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
+          />
+        </template>
+        
+        <template #node-userTask="{ node }">
+          <NormalNode 
+            :id="node?.id"
+            :data="node?.data" 
+            :selected="node?.selected"
+            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
+          />
+        </template>
+        
+        <template #node-systemTask="{ node }">
+          <NormalNode 
+            :id="node?.id"
+            :data="node?.data" 
+            :selected="node?.selected"
+            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
+          />
+        </template>
+        
+        <template #node-decision="{ node }">
+          <DecisionNode 
+            :id="node?.id"
+            :data="node?.data" 
+            :selected="node?.selected"
+            @contextmenu="(event) => handleNodeContextMenu(event, node?.id)"
+          />
+        </template>
+        
+      </VueFlow>
     </div>
+    
+    <!-- 右键菜单 -->
+    <ContextMenu
+      :visible="contextMenu.visible"
+      :position="contextMenu.position"
+      @edit="handleContextMenuEdit"
+      @copy="handleContextMenuCopy"
+      @delete="handleContextMenuDelete"
+      @close="handleContextMenuClose"
+    />
+    
+    <!-- 编辑对话框 -->
+    <EditDialog
+      v-model="editDialog.visible"
+      :node-label="editDialog.nodeLabel"
+      @confirm="handleEditConfirm"
+    />
   </div>
 </template>
 
@@ -637,108 +627,43 @@ defineExpose({
   overflow: hidden;
 }
 
-.logic-flow-container {
+.vue-flow {
   width: 100%;
   height: 100%;
   background: #f8fafc;
 }
 
-.flow-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
-}
-
-.flow-tips {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-width: 300px;
-}
-
-// LogicFlow 全局样式覆盖
-:deep(.lf-node) {
+// 全局样式覆盖
+:deep(.vue-flow__node) {
   cursor: pointer;
 }
 
-:deep(.lf-node.selected) {
+:deep(.vue-flow__node.selected) {
   outline: 2px dashed var(--el-color-primary-light-3);
   outline-offset: 3px;
 }
 
-:deep(.lf-edge) {
+:deep(.vue-flow__node.selected:has(.decision-node)) {
+  outline: 2px dashed var(--el-color-primary-light-3);
+  outline-offset: 20px;
+}
+
+
+:deep(.vue-flow__handle) {
+  background: var(--el-color-primary);
+  border: 2px solid white;
+  width: 8px;
+  height: 8px;
+}
+
+:deep(.vue-flow__edge-path) {
   stroke: var(--el-color-primary) !important;
   stroke-width: 2 !important;
 }
 
-:deep(.lf-edge.selected) {
+:deep(.vue-flow__edge.selected .vue-flow__edge-path) {
   stroke: var(--el-color-primary);
   stroke-width: 3;
 }
 
-// 右键菜单样式
-:deep(.lf-menu) {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 4px 0;
-}
-
-:deep(.lf-menu-item) {
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: #f3f4f6;
-  }
-}
-
-:deep(.lf-menu-delete) {
-  color: #ef4444;
-}
-
-:deep(.lf-menu-edit) {
-  color: var(--el-color-primary);
-}
-
-:deep(.lf-menu-copy) {
-  color: #6b7280;
-}
-:deep(.lf-dndpanel) {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin: 0;
-  top: 20px;
-  left: 20px;
-  .lf-dnd-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-    &:hover {
-      border-color: var(--el-color-primary);
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-      transform: translateY(-1px);
-      background: rgba(59, 130, 246, 0.15);
-    }
-  }
-}
 </style>
