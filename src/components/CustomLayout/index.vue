@@ -38,14 +38,13 @@ interface LayoutClass {
 // 响应式断点配置
 interface BreakpointConfig {
   mobile: number
-  tablet: number
   desktop: number
 }
 
 // 布局状态接口
 interface LayoutState {
   isMobile: boolean
-  isTablet: boolean
+  isDesktopNot: boolean;
   isDesktop: boolean
   screenWidth: number
 }
@@ -71,20 +70,23 @@ const emit = defineEmits<LayoutEmits>()
 // 响应式断点配置
 const breakpoints: BreakpointConfig = {
   mobile: 768,
-  tablet: 1024,
   desktop: 1200
 }
 
 // 响应式数据
 const screenWidth = ref(window.innerWidth)
-const isMobile = computed(() => screenWidth.value < breakpoints.mobile)
-const isTablet = computed(() => screenWidth.value >= breakpoints.mobile && screenWidth.value < breakpoints.tablet)
-const isDesktop = computed(() => screenWidth.value >= breakpoints.tablet)
+const isMobile = computed(() => screenWidth.value <= breakpoints.mobile);
+const isDesktop = computed(() => screenWidth.value >= breakpoints.desktop);
+const isDesktopNot = computed(
+  () =>
+    screenWidth.value > breakpoints.mobile &&
+    screenWidth.value < breakpoints.desktop
+);
 
 // 布局状态
 const layoutState: ComputedRef<LayoutState> = computed(() => ({
   isMobile: isMobile.value,
-  isTablet: isTablet.value,
+  isDesktopNot: isDesktopNot.value,
   isDesktop: isDesktop.value,
   screenWidth: screenWidth.value
 }))
@@ -106,12 +108,11 @@ const layoutClass: ComputedRef<LayoutClass> = computed(() => {
 // 计算属性 - 是否显示侧栏
 const showSidebar: ComputedRef<boolean> = computed(() => {
   if (props.layout === 'top') return false
-  return props.showSidebar && !isMobile.value
+  return props.showSidebar;
 })
 
 // 方法定义
 const toggleCollapse = (): void => {
-  console.log('toggleCollapse------------------------------------------------1');
   emit('update:collapse', !props.collapse)
 }
 
@@ -162,15 +163,27 @@ onUnmounted(() => {
   }
 })
 
-// 监听屏幕尺寸变化，自动调整布局
-watch(isMobile, (newValue, oldValue) => {
-  if (newValue !== oldValue) {
-    // 移动端自动折叠侧栏
-    if (newValue && !props.collapse) {
-      emit('update:collapse', true)
-    }
+// 监听屏幕尺寸变化，自动调整布局  1200px <= isDesktop
+watch(isDesktop, (newValue: boolean, oldValue: boolean) => {
+  if (newValue !== oldValue && newValue) {
+    // 桌面端：显示侧栏并展开
+    emit('update:collapse', false);
   }
-})
+});
+// 监听屏幕尺寸变化，自动调整布局  768px < isDesktopNot < 1200px
+watch(isDesktopNot, (newValue: boolean, oldValue: boolean) => {
+  if (newValue !== oldValue && newValue) {
+    // 中等屏幕：显示侧栏但折叠
+    emit('update:collapse', true);
+  }
+});
+// 监听屏幕尺寸变化，自动调整布局  isMobile <= 768px
+watch(isMobile, (newValue: boolean, oldValue: boolean) => {
+  if (newValue !== oldValue && newValue) {
+    // 移动端：隐藏侧栏（通过折叠实现）
+    emit('update:collapse', true);
+  }
+});
 
 // 暴露给父组件的方法和属性
 defineExpose({
@@ -236,15 +249,7 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
-// 基础变量 - 参考 ele-pro-layout
-$header-height: 56px;
-$sidebar-width: 240px;
-$sidebar-collapse-width: 56px;
-$tabs-height: 40px;
-$z-index-header: 1000;
-$z-index-sidebar: 999;
-$z-index-tabs: 998;
-$z-index-shade: 997;
+@import './assets/styles/var.scss';
 
 .custom-layout {
   position: relative;

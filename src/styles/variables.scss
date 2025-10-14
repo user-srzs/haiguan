@@ -1,4 +1,5 @@
 /** ElementPlus样式变量修改(影响所有scss) */
+@forward "@/components/CustomLayout/assets/styles/var.scss";
 @forward 'element-plus/theme-chalk/src/common/var.scss' with (
   $colors: (
     'primary': (
