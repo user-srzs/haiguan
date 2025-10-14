@@ -249,7 +249,7 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
-@import './assets/styles/var.scss';
+@use './assets/styles/var.scss' as *;
 
 .custom-layout {
   position: relative;
